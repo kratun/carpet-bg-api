@@ -1,0 +1,81 @@
+## Build results
+bin/
+obj/
+out/
+
+## Visual Studio cache/options
+.vs/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Visual Studio Code
+.vscode/
+.history/
+
+## Rider / IntelliJ
+.idea/
+
+## .NET Core
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+*.mdb
+
+# Generated files
+project.fragment.lock.json
+project.lock.json
+artifacts/
+
+## NuGet
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+packages/
+# Keep packages folder if using package restore
+!**/packages/build/
+!**/packages/repositories.config
+
+## Environment / Secrets
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+*.secret.json
+
+## Publish output
+publish/
+*.pubxml
+*.pubxml.user
+
+## Logs
+*.log
+
+## Coverage
+coverage/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.coveragexml
+
+## Temporary files
+*.tmp
+*.temp
+
+## ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+## Backup / crash files
+*.bak
+*.orig
+
+## OS Files
+.DS_Store
+Thumbs.db
