@@ -1,0 +1,15 @@
+root = true
+
+[*.cs]
+charset = utf-8-bom
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+
+# Using directives
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# Organize usings on save (Rider, VS)
+dotnet_diagnostic.IDE0005.severity = silent  # Unused usings
+dotnet_diagnostic.IDE0001.severity = silent  # Name could not be resolved
