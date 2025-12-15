@@ -3,6 +3,7 @@ using System;
 using CarpetBG.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarpetBG.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251211071350_OrderItems_Remove_ExpressServicePrice")]
+    partial class OrderItems_Remove_ExpressServicePrice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -42,9 +45,6 @@ namespace CarpetBG.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("OrderItemId")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
@@ -54,8 +54,6 @@ namespace CarpetBG.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OrderItemId");
 
                     b.ToTable("Additions");
                 });
@@ -201,6 +199,50 @@ namespace CarpetBG.Infrastructure.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("CarpetBG.Domain.Entities.OrderItemAddition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AdditionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AdditionType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrderItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdditionId");
+
+                    b.HasIndex("OrderItemId");
+
+                    b.ToTable("OrderItemAdditions");
+                });
+
             modelBuilder.Entity("CarpetBG.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -272,17 +314,6 @@ namespace CarpetBG.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("CarpetBG.Domain.Entities.Addition", b =>
-                {
-                    b.HasOne("CarpetBG.Domain.Entities.OrderItem", "OrderItem")
-                        .WithMany("Additions")
-                        .HasForeignKey("OrderItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("OrderItem");
-                });
-
             modelBuilder.Entity("CarpetBG.Domain.Entities.Address", b =>
                 {
                     b.HasOne("CarpetBG.Domain.Entities.User", "User")
@@ -335,6 +366,30 @@ namespace CarpetBG.Infrastructure.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("CarpetBG.Domain.Entities.OrderItemAddition", b =>
+                {
+                    b.HasOne("CarpetBG.Domain.Entities.Addition", "Addition")
+                        .WithMany("OrderItemAdditions")
+                        .HasForeignKey("AdditionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CarpetBG.Domain.Entities.OrderItem", "OrderItem")
+                        .WithMany("Additions")
+                        .HasForeignKey("OrderItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Addition");
+
+                    b.Navigation("OrderItem");
+                });
+
+            modelBuilder.Entity("CarpetBG.Domain.Entities.Addition", b =>
+                {
+                    b.Navigation("OrderItemAdditions");
                 });
 
             modelBuilder.Entity("CarpetBG.Domain.Entities.Order", b =>

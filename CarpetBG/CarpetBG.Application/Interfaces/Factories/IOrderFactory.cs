@@ -5,7 +5,7 @@ namespace CarpetBG.Application.Interfaces.Factories;
 
 public interface IOrderFactory
 {
-    Order CreateFromDto(CreateOrderDto dto);
+    Order CreateFromDto(CreateOrderDto dto, List<IAddition> orderAdditions);
     OrderDto CreateFromEntity(Order order);
     Order UpdateFromDto(OrderDeliveryDataDto dto, Order entity);
 }

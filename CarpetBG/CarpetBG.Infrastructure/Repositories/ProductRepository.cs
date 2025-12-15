@@ -8,9 +8,14 @@ namespace CarpetBG.Infrastructure.Repositories;
 
 public class ProductRepository(AppDbContext context) : IProductRepository
 {
-    public async Task<List<Product>> GetAllAsync()
+    public async Task<List<Product>> GetAllAsync(IEnumerable<Guid>? filter = null)
     {
         var query = context.Products.AsNoTracking();
+        if (filter != null && filter.Any())
+        {
+            query = query
+                .Where(p => filter.Contains(p.Id));
+        }
 
         var items = await query.ToListAsync();
 

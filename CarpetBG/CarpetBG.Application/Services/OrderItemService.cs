@@ -3,6 +3,7 @@ using CarpetBG.Application.Interfaces.Common;
 using CarpetBG.Application.Interfaces.Factories;
 using CarpetBG.Application.Interfaces.Repositories;
 using CarpetBG.Application.Interfaces.Services;
+using CarpetBG.Domain.Entities;
 using CarpetBG.Shared;
 
 namespace CarpetBG.Application.Services;
@@ -28,7 +29,28 @@ public class OrderItemService(
             return Result<Guid>.Failure("Order not found.");
         }
 
-        var entity = factory.CreateFromDto(dto, orderId);
+        var additions = dto.Additions.Select(a => new Addition
+        {
+            Name = a.Name,
+            AdditionType = a.AdditionType,
+            NormalizedName = a.NormalizedName,
+            Value = a.Value,
+        }).ToList<IAddition>();
+
+        // TODO Validate additions
+        //if (orderAddition != null && orderAddition.AdditionType == AdditionTypes.AppliedAsPercentage && (orderAddition.Value > 1 || orderAddition.Value <= 0))
+        //{
+        //    var range = "(0% , 100%]";
+
+        //    throw new ArgumentException($"Total amount addintion should be in range {range}.");
+        //}
+
+        //if (!isFree && orderAddition != null && orderAddition.AdditionType == AdditionTypes.AppliedAsPercentage && orderAddition.Value <= 0)
+        //{
+        //    throw new ArgumentException("Total amount addintion should be greater than zero.");
+        //}
+
+        var entity = factory.CreateFromDto(dto, orderId, additions);
 
         await repository.AddAsync(entity);
 

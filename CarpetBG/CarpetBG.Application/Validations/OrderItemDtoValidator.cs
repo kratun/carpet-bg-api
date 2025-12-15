@@ -34,6 +34,7 @@ public class OrderItemDtoValidator : IValidator<OrderItemDto>
             return "Height or Width must be empty.";
         }
 
+        // TODO Add Addition validator
         return null;
     }
 }

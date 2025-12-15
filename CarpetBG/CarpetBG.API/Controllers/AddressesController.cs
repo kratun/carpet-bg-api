@@ -14,7 +14,7 @@ public class AddressesController(IAddressService addressService) : ControllerBas
     {
         var result = await addressService.GetFilteredAsync(filter);
 
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
     [HttpGet]
@@ -23,7 +23,7 @@ public class AddressesController(IAddressService addressService) : ControllerBas
     {
         var result = await addressService.GetByIdAsync(id);
 
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
     [HttpPost]
@@ -31,6 +31,6 @@ public class AddressesController(IAddressService addressService) : ControllerBas
     public async Task<IActionResult> Create([FromBody] CreateAddressDto dto)
     {
         var result = await addressService.CreateAddressAsync(dto);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 }

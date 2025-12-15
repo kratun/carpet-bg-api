@@ -11,8 +11,8 @@ public class AdditionConfiguration : IEntityTypeConfiguration<Addition>
     {
         builder.HasKey(a => a.Id);
 
-        builder.HasMany(a => a.OrderItemAdditions)
-            .WithOne(oia => oia.Addition)
+        builder.HasOne(a => a.OrderItem)
+            .WithMany(i => i.Additions)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(o => o.CreatedAt)

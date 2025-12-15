@@ -6,9 +6,9 @@ public class OrderItem : BaseEntity
     public decimal? Height { get; set; }
     public decimal? Diagonal { get; set; }
     public decimal Price { get; set; }
-    public decimal ExpressServicePrice { get; set; }
     public string Note { get; set; } = string.Empty;
-    public List<OrderItemAddition> Additions { get; set; } = [];
+    public bool IsDelivered { get; set; } = false;
+    public List<Addition> Additions { get; set; } = [];
     public Guid OrderId { get; set; }
     public virtual Order Order { get; set; } = null!;
 

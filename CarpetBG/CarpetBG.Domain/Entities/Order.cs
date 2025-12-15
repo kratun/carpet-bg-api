@@ -17,7 +17,5 @@ public class Order : BaseEntity
     public virtual User User { get; set; } = null!;
     public OrderStatuses Status { get; set; }
     public string Note { get; set; } = string.Empty;
-    public bool IsExpress { get; set; }
-    public decimal PercentagePriceAddition { get; set; }
     public List<OrderItem> Items { get; set; } = [];
 }

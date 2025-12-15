@@ -8,10 +8,10 @@ namespace CarpetBG.Application.Factories;
 
 public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory orderItemFactory) : IOrderFactory
 {
-    public Order CreateFromDto(CreateOrderDto dto)
+    public Order CreateFromDto(CreateOrderDto dto, List<IAddition> orderAdditions)
     {
         var orderId = Guid.NewGuid();
-        var percentagePriceAddition = dto.IsExpress ? 0.5m : 0.0m;
+
         return new()
         {
             Id = orderId,
@@ -21,9 +21,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
             UserId = dto.CustomerId,
             Status = OrderStatuses.PendingPickup,
             Note = dto.Note,
-            IsExpress = dto.IsExpress,
-            PercentagePriceAddition = percentagePriceAddition,
-            Items = [.. dto.OrderItems.Select(oi => orderItemFactory.CreateFromDto(oi, orderId))]
+            Items = [.. dto.OrderItems.Select(oi => orderItemFactory.CreateFromDto(oi, orderId, orderAdditions))]
         };
     }
 

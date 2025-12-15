@@ -1,8 +1,10 @@
 ﻿using CarpetBG.Application.DTOs.Orders;
+using CarpetBG.Application.Helpers;
 using CarpetBG.Application.Interfaces.Common;
 using CarpetBG.Application.Interfaces.Factories;
 using CarpetBG.Application.Interfaces.Repositories;
 using CarpetBG.Application.Interfaces.Services;
+using CarpetBG.Domain.Entities;
 using CarpetBG.Domain.Enums;
 using CarpetBG.Shared;
 
@@ -59,7 +61,37 @@ public class OrderService(
             return Result<Guid>.Failure("Order items are not valid: " + error);
         }
 
-        var order = orderFactory.CreateFromDto(dto);
+        // TODO Validate additions
+        //if (orderAddition != null && orderAddition.AdditionType == AdditionTypes.AppliedAsPercentage && (orderAddition.Value > 1 || orderAddition.Value <= 0))
+        //{
+        //    var range = "(0% , 100%]";
+
+        //    throw new ArgumentException($"Total amount addintion should be in range {range}.");
+        //}
+
+        //if (!isFree && orderAddition != null && orderAddition.AdditionType == AdditionTypes.AppliedAsPercentage && orderAddition.Value <= 0)
+        //{
+        //    throw new ArgumentException("Total amount addintion should be greater than zero.");
+        //}
+
+        List<IAddition> orderItemAdditions = dto.IsExpress
+            ? [new Addition
+            {
+                Name = "Express",
+                NormalizedName = "express",
+                AdditionType = AdditionTypes.AppliedAsPercentage,
+                Value = 0.5m,
+            }]
+            : [];
+        var order = orderFactory.CreateFromDto(dto, orderItemAdditions);
+        var items = order.Items;
+        var products = await productRepository.GetAllAsync(items.Where(i => i.ProductId.HasValue).Select(i => i.ProductId!.Value));
+        items.ForEach(item =>
+        {
+            var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+            var price = product != null ? product.Price : decimal.Zero;
+            item.Price = price;
+        });
 
         await repository.AddAsync(order);
 
@@ -84,13 +116,6 @@ public class OrderService(
                     canUpdateManualyOrderStatus = true;
                 }
                 break;
-            case OrderStatuses.PendingDelivery:
-                if (dto.NextStatus == OrderStatuses.DeliveryComplete)
-                {
-                    order.Status = dto.NextStatus;
-                    canUpdateManualyOrderStatus = true;
-                }
-                break;
             case OrderStatuses.PickupComplete:
                 if (dto.NextStatus == OrderStatuses.WashingComplete)
                 {
@@ -105,7 +130,7 @@ public class OrderService(
 
         if (!canUpdateManualyOrderStatus)
         {
-            return Result<Guid>.Failure("Ordr satus can not be updated");
+            return Result<Guid>.Failure("Ordr satus can not be updated.");
         }
 
         await repository.UpdateAsync(order);
@@ -154,7 +179,7 @@ public class OrderService(
 
         if (!canUpdateManualyOrderStatus)
         {
-            return Result<Guid>.Failure("Ordr satus can not be updated");
+            return Result<Guid>.Failure("Order satus can not be reverted.");
         }
 
         await repository.UpdateAsync(order);
@@ -164,10 +189,15 @@ public class OrderService(
 
     public async Task<Result<Guid>> AddDeliveryDataAsync(Guid id, OrderDeliveryDataDto dto)
     {
-        var order = await repository.GetByIdAsync(id, needTrackiing: true);
+        var order = await repository.GetByIdAsync(id, needTrackiing: true, includeItems: true);
         if (order == null)
         {
             return Result<Guid>.Failure("Ordr was not found");
+        }
+
+        if (order.Status != OrderStatuses.WashingComplete)
+        {
+            return Result<Guid>.Failure("Order cannot be updated. Incorrect status.");
         }
 
         var deliveryAddress = await addressRepository.GetByIdAsync(dto.DeliveryAddressId, order.UserId);
@@ -182,6 +212,50 @@ public class OrderService(
 
         return Result<Guid>.Success(order.Id);
 
+    }
+
+    public async Task<Result<Guid>> ConfirmDeliveryAsync(Guid id, OrderDeliveryConfirmDto dto)
+    {
+        var order = await repository.GetByIdAsync(id, needTrackiing: true, includeItems: true);
+        if (order == null)
+        {
+            return Result<Guid>.Failure("Order was not found");
+        }
+
+        if (order.Status != OrderStatuses.PendingDelivery)
+        {
+            return Result<Guid>.Failure("Order cannot be updated. Incorrect status.");
+        }
+
+        var deliveredItems = dto.DeliveredItems.ToHashSet();
+        var orderItems = order.Items;
+        var targetItems = order.Items
+            .Where(i => deliveredItems.Contains(i.Id))
+            .ToList();
+
+        if (orderItems.Count != targetItems.Count)
+        {
+            return Result<Guid>.Failure("Some of the order items were not found");
+        }
+
+        var targetAmount = targetItems
+            .Sum(i => OrderItemHelper.CalculateAmount(i.Price, i.Width, i.Height, i.Diagonal, i.Additions.AsEnumerable<IAddition>()));
+
+        if (dto.PaidAmount != targetAmount)
+        {
+            return Result<Guid>.Failure("Paid amount does not match the target amount");
+        }
+
+        targetItems.ForEach(item =>
+        {
+            item.IsDelivered = true;
+        });
+
+        order.Status = OrderStatuses.Completed;
+
+        await repository.UpdateAsync(order);
+
+        return Result<Guid>.Success(id);
     }
 
     private async Task<string?> ValidateOrderItemsAsync(List<OrderItemDto> items)
