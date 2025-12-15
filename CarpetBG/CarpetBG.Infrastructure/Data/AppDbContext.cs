@@ -19,9 +19,8 @@ public class AppDbContext : DbContext
     public DbSet<Address> Addresses { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
-    public DbSet<OrderItemAddition> OrderItemAdditions { get; set; }
-    public DbSet<User> Users { get; set; }
     public DbSet<Addition> Additions { get; set; }
+    public DbSet<User> Users { get; set; }
     public DbSet<Product> Products { get; set; }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -39,6 +38,7 @@ public class AppDbContext : DbContext
             if (entry.State == EntityState.Modified)
             {
                 entry.Entity.UpdatedAt = auditDate;
+                entry.Property(e => e.CreatedAt).IsModified = false;
             }
         }
 

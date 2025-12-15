@@ -1,4 +1,5 @@
-﻿using CarpetBG.Application.DTOs.Orders;
+﻿using CarpetBG.Application.DTOs.Additions;
+using CarpetBG.Application.DTOs.Orders;
 using CarpetBG.Application.Enums;
 using CarpetBG.Application.Interfaces.Common;
 using CarpetBG.Application.Interfaces.Repositories;
@@ -88,6 +89,7 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
             .Select(i => new OrderDto
             {
                 Id = i.Id,
+                IsExpress = i.Items.All(i => i.Additions.Any(a => a.NormalizedName == "express")),
                 PickupAddress = i.PickupAddress.DisplayAddress,
                 PickupDate = i.PickupDate,
                 PickupAddressId = i.PickupAddressId,
@@ -97,7 +99,7 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
                 PickupTimeRange = i.PickupTimeRange,
                 Status = i.Status,
                 Note = i.Note,
-                DeliveryAddress = i.DeliveryAddress != null ? i.DeliveryAddress.DisplayAddress : string.Empty,
+                DeliveryAddress = i.DeliveryAddress.DisplayAddress,
                 DeliveryAddressId = i.DeliveryAddressId,
                 DeliveryDate = i.DeliveryDate,
                 DeliveryTimeRange = i.DeliveryTimeRange,
@@ -110,6 +112,13 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
                     Price = oi.Price,
                     Width = oi.Width,
                     ProductId = oi.ProductId ?? Guid.Empty,
+                    Additions = oi.Additions.Select(a => new AdditionDto
+                    {
+                        AdditionType = a.AdditionType,
+                        Name = a.Name,
+                        NormalizedName = a.NormalizedName,
+                        Value = a.Value
+                    }).ToList(),
                 }).ToList(),
             })
             .ToListAsync();
@@ -119,12 +128,19 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
 
     }
 
-    public async Task<Order?> GetByIdAsync(Guid id, bool includeDeleted = false, bool needTrackiing = false)
+    public async Task<Order?> GetByIdAsync(Guid id, bool includeDeleted = false, bool needTrackiing = false, bool includeItems = false)
     {
         var query = context.Orders
-            .Include(i => i.User)
-            .Include(i => i.PickupAddress)
+            .Include(o => o.User)
+            .Include(o => o.PickupAddress)
             .AsQueryable();
+
+        if (includeItems)
+        {
+            query = query
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Additions);
+        }
 
         if (!needTrackiing)
         {

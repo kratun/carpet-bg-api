@@ -14,7 +14,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     public async Task<IActionResult> GetAll([FromQuery] OrderFilterDto dto)
     {
         var result = await orderService.GetFilteredAsync(dto);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
     [HttpGet]
@@ -23,7 +23,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
         var result = await orderService.GetByIdAsync(id);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
     [HttpPost]
@@ -31,7 +31,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
     {
         var result = await orderService.CreateOrderAsync(dto);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
     [HttpPost]
@@ -40,7 +40,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     public async Task<IActionResult> AddOrderItem([FromRoute] Guid id, [FromBody] OrderItemDto dto)
     {
         var result = await orderItemService.AddAsync(dto, id);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
     [HttpPut]
@@ -49,7 +49,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     public async Task<IActionResult> UpdateStatus([FromRoute] Guid id, [FromBody] UpdateOrderStatusDto dto)
     {
         var result = await orderService.UpdateOrderStatusAsync(id, dto);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
     [HttpPut]
@@ -58,7 +58,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     public async Task<IActionResult> RevertStatus([FromRoute] Guid id, [FromBody] UpdateOrderStatusDto dto)
     {
         var result = await orderService.RevertOrderStatusAsync(id, dto);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
     [HttpPut]
@@ -67,6 +67,15 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     public async Task<IActionResult> AddDeliveryData([FromRoute] Guid id, [FromBody] OrderDeliveryDataDto dto)
     {
         var result = await orderService.AddDeliveryDataAsync(id, dto);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
+    [HttpPut]
+    [Route("{id}/delivery-confirm")]
+    //[Authorize]
+    public async Task<IActionResult> ConfirmDelivery([FromRoute] Guid id, [FromBody] OrderDeliveryConfirmDto dto)
+    {
+        var result = await orderService.ConfirmDeliveryAsync(id, dto);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 }

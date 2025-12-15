@@ -14,6 +14,6 @@ public class ProductsController(IProductService productService) : ControllerBase
     {
         var result = await productService.GetAllAsync();
 
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 }

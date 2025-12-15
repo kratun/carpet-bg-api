@@ -12,4 +12,5 @@ public interface IOrderService
     Task<Result<Guid>> UpdateOrderStatusAsync(Guid id, UpdateOrderStatusDto dto);
     Task<Result<Guid>> RevertOrderStatusAsync(Guid id, UpdateOrderStatusDto dto);
     Task<Result<Guid>> AddDeliveryDataAsync(Guid id, OrderDeliveryDataDto dto);
+    Task<Result<Guid>> ConfirmDeliveryAsync(Guid id, OrderDeliveryConfirmDto dto);
 }
