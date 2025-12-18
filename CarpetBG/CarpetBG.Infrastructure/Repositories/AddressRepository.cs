@@ -1,4 +1,5 @@
 ﻿
+using CarpetBG.Application.Common;
 using CarpetBG.Application.DTOs.Addresses;
 using CarpetBG.Application.Interfaces.Repositories;
 using CarpetBG.Domain.Entities;
@@ -29,19 +30,20 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
 
         var totalCount = await query.CountAsync();
 
+        query = query.OrderByDescending(a => a.CreatedAt);
+
+        query = query.ApplyPagination(filter.PageIndex, filter.PageSize);
+
         var items = await query
-            .OrderByDescending(a => a.CreatedAt)
-            .Skip((filter.PageNumber - 1) * filter.PageSize)
-            .Take(filter.PageSize)
-            .Select(i => new AddressDto
-            {
-                Id = i.Id,
-                DisplayAddress = i.DisplayAddress,
-                PhoneNumber = i.User.PhoneNumber,
-                UserFullName = i.User.FullName,
-                UserId = i.UserId
-            })
-            .ToListAsync();
+             .Select(i => new AddressDto
+             {
+                 Id = i.Id,
+                 DisplayAddress = i.DisplayAddress,
+                 PhoneNumber = i.User.PhoneNumber,
+                 UserFullName = i.User.FullName,
+                 UserId = i.UserId
+             })
+             .ToListAsync();
 
         return (items, totalCount);
     }

@@ -46,12 +46,12 @@ public class AddressService(IAddressRepository addressRepository, IUserRepositor
         return Result<AddressDto>.Success(addressFactory.CreateFromEntity(address));
     }
 
-    public async Task<Result<PaginatedList<AddressDto>>> GetFilteredAsync(AddressFilterDto filter)
+    public async Task<Result<PaginatedResult<AddressDto>>> GetFilteredAsync(AddressFilterDto filter)
     {
         var (items, totalCount) = await addressRepository.GetFilteredAsync(filter);
 
-        var paginated = new PaginatedList<AddressDto>(items, totalCount, filter.PageNumber, filter.PageSize);
+        var paginated = new PaginatedResult<AddressDto>(items, totalCount, filter.PageIndex, filter.PageSize);
 
-        return Result<PaginatedList<AddressDto>>.Success(paginated);
+        return Result<PaginatedResult<AddressDto>>.Success(paginated);
     }
 }

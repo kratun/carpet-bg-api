@@ -1,4 +1,5 @@
-﻿using CarpetBG.Application.DTOs.Additions;
+﻿using CarpetBG.Application.Common;
+using CarpetBG.Application.DTOs.Additions;
 using CarpetBG.Application.DTOs.Orders;
 using CarpetBG.Application.Enums;
 using CarpetBG.Application.Interfaces.Common;
@@ -78,17 +79,13 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
             _ => query.OrderByDescending(o => o.CreatedAt),
         };
 
-        if (filter.PageSize > 0)
-        {
-            query = query
-            .Skip((filter.PageNumber - 1) * filter.PageSize)
-            .Take(filter.PageSize);
-        }
+        query = query.ApplyPagination(filter.PageIndex, filter.PageSize);
 
         var items = await query
             .Select(i => new OrderDto
             {
                 Id = i.Id,
+                CreatedAt = i.CreatedAt,
                 IsExpress = i.Items.All(i => i.Additions.Any(a => a.NormalizedName == "express")),
                 PickupAddress = i.PickupAddress.DisplayAddress,
                 PickupDate = i.PickupDate,

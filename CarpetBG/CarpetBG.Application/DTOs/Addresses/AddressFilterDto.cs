@@ -1,10 +1,6 @@
-﻿using CarpetBG.Domain.Constants;
+﻿using CarpetBG.Application.DTOs.Common;
 
 namespace CarpetBG.Application.DTOs.Addresses;
 
-public class AddressFilterDto
-{
-    public string? SearchTerm { get; set; }
-    public int PageNumber { get; set; } = PaginationConstants.DefaultPageNumber;
-    public int PageSize { get; set; } = PaginationConstants.DefaultPageSize;
-}
+public class AddressFilterDto : BaseFilter
+{ }
