@@ -19,13 +19,13 @@ public class OrderService(
     IValidator<OrderItemDto> orderItemValidator)
     : IOrderService
 {
-    public async Task<Result<PaginatedList<OrderDto>>> GetFilteredAsync(OrderFilterDto filter)
+    public async Task<Result<PaginatedResult<OrderDto>>> GetFilteredAsync(OrderFilterDto filter)
     {
         var (items, totalCount) = await repository.GetFilteredAsync(filter);
 
-        var paginated = new PaginatedList<OrderDto>(items, totalCount, filter.PageNumber, filter.PageSize);
+        var paginated = new PaginatedResult<OrderDto>(items, totalCount, filter.PageIndex, filter.PageSize);
 
-        return Result<PaginatedList<OrderDto>>.Success(paginated);
+        return Result<PaginatedResult<OrderDto>>.Success(paginated);
     }
 
     public async Task<Result<OrderDto>> GetByIdAsync(Guid id)

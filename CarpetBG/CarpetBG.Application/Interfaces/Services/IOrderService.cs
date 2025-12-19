@@ -5,7 +5,7 @@ namespace CarpetBG.Application.Interfaces.Services;
 
 public interface IOrderService
 {
-    Task<Result<PaginatedList<OrderDto>>> GetFilteredAsync(OrderFilterDto filter);
+    Task<Result<PaginatedResult<OrderDto>>> GetFilteredAsync(OrderFilterDto filter);
     Task<Result<OrderDto>> GetByIdAsync(Guid id);
 
     Task<Result<Guid>> CreateOrderAsync(CreateOrderDto dto);
