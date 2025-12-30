@@ -6,4 +6,6 @@ namespace CarpetBG.Application.Interfaces.Services;
 public interface IOrderItemService
 {
     Task<Result<Guid>> AddAsync(OrderItemDto dto, Guid orderId);
+    Task<Result<Guid>> UpdateAsync(Guid id, OrderItemDto dto, Guid orderId);
+    Task<Result<Guid>> CompleteWashingAsync(Guid id, Guid orderId);
 }

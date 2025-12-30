@@ -4,7 +4,7 @@ using CarpetBG.Domain.Entities;
 
 namespace CarpetBG.Application.Factories;
 
-public class ProductFactory() : IProductFactory
+public class ProductFactory() : BaseFactory, IProductFactory
 {
     public Product CreateFromDto(ProductDto dto)
     {

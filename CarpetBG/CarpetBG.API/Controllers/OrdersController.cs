@@ -17,6 +17,14 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
+    [HttpGet("setup-logistic-data")]
+    //[Authorize]
+    public async Task<IActionResult> GetSetupLogistic([FromQuery] OrderFilterDto dto)
+    {
+        var result = await orderService.GetSetupLogisticDataAsync(dto);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
     [HttpGet]
     [Route("{id}")]
     //[Authorize]
@@ -40,6 +48,33 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     public async Task<IActionResult> AddOrderItem([FromRoute] Guid id, [FromBody] OrderItemDto dto)
     {
         var result = await orderItemService.AddAsync(dto, id);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
+    [HttpPut]
+    [Route("reorder")]
+    //[Authorize]
+    public async Task<IActionResult> Reorder([FromBody] List<OrderDto> dtos)
+    {
+        var result = await orderService.SetOrderByAsync(dtos);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
+    [HttpPut]
+    [Route("{orderId}/order-items/{id}")]
+    //[Authorize]
+    public async Task<IActionResult> UpdateOrderItem([FromRoute] Guid orderId, [FromRoute] Guid id, [FromBody] OrderItemDto dto)
+    {
+        var result = await orderItemService.UpdateAsync(id, dto, orderId);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
+    [HttpPut]
+    [Route("{orderId}/order-items/{id}/complete-washing")]
+    //[Authorize]
+    public async Task<IActionResult> CompleteWashingOrderItem([FromRoute] Guid orderId, [FromRoute] Guid id)
+    {
+        var result = await orderItemService.CompleteWashingAsync(id, orderId);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
@@ -76,6 +111,15 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     public async Task<IActionResult> ConfirmDelivery([FromRoute] Guid id, [FromBody] OrderDeliveryConfirmDto dto)
     {
         var result = await orderService.ConfirmDeliveryAsync(id, dto);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
+    [HttpPut]
+    [Route("{id}/complete-washing")]
+    //[Authorize]
+    public async Task<IActionResult> CompleteWashingAsync([FromRoute] Guid id)
+    {
+        var result = await orderService.CompleteWashingAsync(id);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 }

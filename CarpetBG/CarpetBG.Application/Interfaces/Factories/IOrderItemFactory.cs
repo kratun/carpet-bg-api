@@ -1,9 +1,10 @@
 ﻿using CarpetBG.Application.DTOs.Orders;
 using CarpetBG.Domain.Entities;
+using CarpetBG.Domain.Enums;
 
 namespace CarpetBG.Application.Interfaces.Factories;
 
-public interface IOrderItemFactory
+public interface IOrderItemFactory : IBaseFactory
 {
     /// <summary>
     /// 
@@ -14,5 +15,7 @@ public interface IOrderItemFactory
     /// <param name="isFree"></param>
     /// <returns></returns>
     OrderItem CreateFromDto(OrderItemDto dto, Guid orderId, List<IAddition> orderAdditions, bool isFree = false);
+    OrderItem CreateFromDto(OrderItemDto dto, OrderItem entity, List<IAddition> orderAdditions, bool isFree = false);
+    OrderItem CreateFromDto(OrderItemStatuses nextOrderItemStatus, OrderItem entity, OrderStatuses nextOrderStatus);
     OrderItemDto CreateFromEntity(OrderItem entity);
 }

@@ -2,10 +2,11 @@
 using CarpetBG.Application.DTOs.Orders;
 using CarpetBG.Application.Interfaces.Factories;
 using CarpetBG.Domain.Entities;
+using CarpetBG.Domain.Enums;
 
 namespace CarpetBG.Application.Factories;
 
-public class OrderItemFactory : IOrderItemFactory
+public class OrderItemFactory : BaseFactory, IOrderItemFactory
 {
     public OrderItem CreateFromDto(OrderItemDto dto, Guid orderId, List<IAddition> orderAdditions, bool isFree = false)
     {
@@ -19,6 +20,7 @@ public class OrderItemFactory : IOrderItemFactory
             Note = dto.Note,
             OrderId = orderId,
             ProductId = dto.ProductId,
+            Status = OrderItemStatuses.New,
             Additions = orderAdditions.Select(a => new Addition
             {
                 AdditionType = a.AdditionType,
@@ -47,5 +49,17 @@ public class OrderItemFactory : IOrderItemFactory
                 NormalizedName = a.NormalizedName,
                 Value = a.Value })],
         };
+    }
+
+    public OrderItem CreateFromDto(OrderItemDto dto, OrderItem entity, List<IAddition> orderAdditions, bool isFree = false)
+    {
+        throw new NotImplementedException();
+    }
+
+    public OrderItem CreateFromDto(OrderItemStatuses nextOrderItemStatus, OrderItem entity, OrderStatuses nextOrderStatus)
+    {
+        entity.Status = nextOrderItemStatus;
+        entity.Order.Status = nextOrderStatus;
+        return entity;
     }
 }

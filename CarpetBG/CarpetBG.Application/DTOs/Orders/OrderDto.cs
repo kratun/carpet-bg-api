@@ -7,7 +7,7 @@ public class OrderDto
     public Guid Id { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsExpress { get; set; }
-    public string UserFullName { get; set; } = string.Empty;
+    public string CustomerFullName { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public string PickupAddress { get; set; } = string.Empty;
     public Guid CustomerId { get; set; }
@@ -19,6 +19,7 @@ public class OrderDto
     public DateTime? DeliveryDate { get; set; }
     public string DeliveryAddress { get; set; } = string.Empty;
     public OrderStatuses Status { get; set; }
+    public int? OrderBy { get; set; }
     public string Note { get; set; } = string.Empty;
     public List<OrderItemDto> OrderItems { get; set; } = [];
     public decimal TotalAmount => OrderItems.Sum(i => i.Amount);

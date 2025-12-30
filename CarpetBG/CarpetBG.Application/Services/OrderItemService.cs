@@ -4,6 +4,7 @@ using CarpetBG.Application.Interfaces.Factories;
 using CarpetBG.Application.Interfaces.Repositories;
 using CarpetBG.Application.Interfaces.Services;
 using CarpetBG.Domain.Entities;
+using CarpetBG.Domain.Enums;
 using CarpetBG.Shared;
 
 namespace CarpetBG.Application.Services;
@@ -53,6 +54,84 @@ public class OrderItemService(
         var entity = factory.CreateFromDto(dto, orderId, additions);
 
         await repository.AddAsync(entity);
+
+        return Result<Guid>.Success(entity.Id);
+    }
+
+    public async Task<Result<Guid>> CompleteWashingAsync(Guid id, Guid orderId)
+    {
+        var orderItem = await repository.GetByIdAsync(id, includeOrder: true);
+        if (orderItem == null || orderItem.IsDeleted)
+        {
+            return Result<Guid>.Failure("Order item not found.");
+        }
+
+        if (orderItem.OrderId != orderId || orderItem.Order.IsDeleted)
+        {
+            return Result<Guid>.Failure("Order not found.");
+        }
+
+        var entity = factory.CreateFromDto(OrderItemStatuses.WashingComplete, orderItem, OrderStatuses.WashingInProgress);
+
+        var result = await repository.UpdateAsync(entity);
+
+        if (result == null)
+        {
+            return Result<Guid>.Failure("Order Item was not updated");
+        }
+
+        return Result<Guid>.Success(entity.Id);
+    }
+
+    public async Task<Result<Guid>> UpdateAsync(Guid id, OrderItemDto dto, Guid orderId)
+    {
+        var error = orderItemValidator.Validate(dto);
+        if (string.IsNullOrEmpty(error))
+        {
+            Result<Guid>.Failure($"The order item has error: {error}.");
+        }
+
+        var order = await orderRepository.GetByIdAsync(orderId, needTrackiing: false);
+        if (order == null || order.IsDeleted)
+        {
+            return Result<Guid>.Failure("Order not found.");
+        }
+
+        var orderItem = await repository.GetByIdAsync(id);
+        if (orderItem == null || orderItem.OrderId != orderId)
+        {
+            return Result<Guid>.Failure("Order item not found.");
+        }
+
+        var additions = dto.Additions.Select(a => new Addition
+        {
+            Name = a.Name,
+            AdditionType = a.AdditionType,
+            NormalizedName = a.NormalizedName,
+            Value = a.Value,
+        }).ToList<IAddition>();
+
+        // TODO Validate additions
+        //if (orderAddition != null && orderAddition.AdditionType == AdditionTypes.AppliedAsPercentage && (orderAddition.Value > 1 || orderAddition.Value <= 0))
+        //{
+        //    var range = "(0% , 100%]";
+
+        //    throw new ArgumentException($"Total amount addintion should be in range {range}.");
+        //}
+
+        //if (!isFree && orderAddition != null && orderAddition.AdditionType == AdditionTypes.AppliedAsPercentage && orderAddition.Value <= 0)
+        //{
+        //    throw new ArgumentException("Total amount addintion should be greater than zero.");
+        //}
+
+        var entity = factory.CreateFromDto(dto, orderId, additions);
+
+        var result = await repository.UpdateAsync(entity);
+
+        if (result == null)
+        {
+            return Result<Guid>.Failure("Order Item was not updated");
+        }
 
         return Result<Guid>.Success(entity.Id);
     }

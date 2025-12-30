@@ -13,6 +13,7 @@ public class Order : BaseEntity
     public virtual Address DeliveryAddress { get; set; } = null!;
     public string DeliveryTimeRange { get; set; } = string.Empty;
     public DateTime? DeliveryDate { get; set; }
+    public int? OrderBy { get; set; }
     public Guid UserId { get; set; }
     public virtual User User { get; set; } = null!;
     public OrderStatuses Status { get; set; }

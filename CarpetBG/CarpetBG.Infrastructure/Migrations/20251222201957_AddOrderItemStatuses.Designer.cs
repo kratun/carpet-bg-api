@@ -3,6 +3,7 @@ using System;
 using CarpetBG.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarpetBG.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251222201957_AddOrderItemStatuses")]
+    partial class AddOrderItemStatuses
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -116,9 +119,6 @@ namespace CarpetBG.Infrastructure.Migrations
                     b.Property<string>("Note")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int?>("OrderBy")
-                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("PickupAddressId")
                         .HasColumnType("TEXT");

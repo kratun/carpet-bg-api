@@ -3,7 +3,7 @@ using CarpetBG.Domain.Entities;
 
 namespace CarpetBG.Application.Interfaces.Factories;
 
-public interface IAddressFactory
+public interface IAddressFactory : IBaseFactory
 {
     Address CreateFromDto(CreateAddressDto dto);
     AddressDto CreateFromEntity(Address address);
