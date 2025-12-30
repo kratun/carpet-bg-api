@@ -4,7 +4,7 @@ using CarpetBG.Domain.Entities;
 
 namespace CarpetBG.Application.Factories;
 
-public class UserFactory : IUserFactory
+public class UserFactory : BaseFactory, IUserFactory
 {
     public User CreateFromDto(CreateUserDto dto)
     {

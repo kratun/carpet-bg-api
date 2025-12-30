@@ -3,7 +3,7 @@ using CarpetBG.Domain.Entities;
 
 namespace CarpetBG.Application.Interfaces.Factories;
 
-public interface IProductFactory
+public interface IProductFactory : IBaseFactory
 {
     Product CreateFromDto(ProductDto dto);
     Product UpdateFromDto(Product entity, ProductDto dto);

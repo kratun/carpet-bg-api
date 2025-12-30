@@ -22,20 +22,32 @@ public class ProductRepository(AppDbContext context) : IProductRepository
         return items;
     }
 
-    public async Task<Product?> GetByIdAsync(Guid id)
+    public async Task<Product?> GetByIdAsync(Guid id, bool includeDeleted = false)
     {
         var query = context.Products.AsQueryable();
 
-        var entity = await query.FirstOrDefaultAsync(i => i.Id == id && !i.IsDeleted);
+        if (!includeDeleted)
+        {
+            query = query.Where(i => !i.IsDeleted);
+        }
+
+        var entity = await query.FirstOrDefaultAsync(i => i.Id == id);
 
         return entity;
     }
 
-    public async Task<Product?> GetByNameAsync(string name)
+    public async Task<Product?> GetByNameAsync(string name, bool includeDeleted = false)
     {
+        var query = context.Products.AsQueryable();
+
+        if (!includeDeleted)
+        {
+            query = query.Where(i => !i.IsDeleted);
+        }
+
         var normalizedName = name.Trim().ToLowerInvariant();
 
-        var entity = await context.Products.FirstOrDefaultAsync(i => i.NormalizedName == normalizedName && !i.IsDeleted);
+        var entity = await query.FirstOrDefaultAsync(i => i.NormalizedName == normalizedName);
 
         return entity;
     }

@@ -3,7 +3,7 @@ using CarpetBG.Domain.Entities;
 
 namespace CarpetBG.Application.Interfaces.Factories;
 
-public interface IUserFactory
+public interface IUserFactory : IBaseFactory
 {
     User CreateFromDto(CreateUserDto dto);
 }

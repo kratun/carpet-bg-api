@@ -50,7 +50,7 @@ public class AddressService(IAddressRepository addressRepository, IUserRepositor
     {
         var (items, totalCount) = await addressRepository.GetFilteredAsync(filter);
 
-        var paginated = new PaginatedResult<AddressDto>(items, totalCount, filter.PageIndex, filter.PageSize);
+        var paginated = addressFactory.CreatePaginatedResult(items, totalCount, filter.PageIndex, filter.PageSize);
 
         return Result<PaginatedResult<AddressDto>>.Success(paginated);
     }

@@ -6,7 +6,7 @@ using CarpetBG.Domain.Enums;
 
 namespace CarpetBG.Application.Factories;
 
-public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory orderItemFactory) : IOrderFactory
+public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory orderItemFactory) : BaseFactory, IOrderFactory
 {
     public Order CreateFromDto(CreateOrderDto dto, List<IAddition> orderAdditions)
     {
@@ -20,7 +20,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
             PickupTimeRange = dto.PickupTimeRange,
             UserId = dto.CustomerId,
             Status = OrderStatuses.PendingPickup,
-            Note = dto.Note,
+            Note = dto.Note ?? string.Empty,// TODO add migration for nullable
             Items = [.. dto.OrderItems.Select(oi => orderItemFactory.CreateFromDto(oi, orderId, orderAdditions))]
         };
     }
@@ -41,16 +41,30 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
             PickupDate = localPickupDate,
             PickupTimeRange = order.PickupTimeRange,
             Status = order.Status,
-            UserFullName = order.User.FullName,
+            CustomerFullName = order.User.FullName,
         };
     }
 
     public Order UpdateFromDto(OrderDeliveryDataDto dto, Order entity)
     {
-        entity.DeliveryDate = dto.DeliveryDate;
-        entity.DeliveryAddressId = dto.DeliveryAddressId;
+        var isPickup = entity.Status == OrderStatuses.PendingPickup || entity.Status == OrderStatuses.New;
+        if (isPickup)
+        {
+            entity.PickupDate = dto.Date;
+            entity.PickupAddressId = dto.AddressId;
+            entity.Status = OrderStatuses.PendingPickup;
+            entity.PickupTimeRange = dto.TimeRange;
+        }
 
-        entity.DeliveryTimeRange = dto.DeliveryTimeRange;
+        var isDelivery = entity.Status == OrderStatuses.PendingDelivery || entity.Status == OrderStatuses.WashingComplete;
+        if (isDelivery)
+        {
+            entity.DeliveryDate = dto.Date;
+            entity.DeliveryAddressId = dto.AddressId;
+            entity.Status = OrderStatuses.PendingDelivery;
+            entity.DeliveryTimeRange = dto.TimeRange;
+        }
+
         entity.Note = dto.Note;
 
         return entity;

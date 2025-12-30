@@ -7,6 +7,7 @@ using CarpetBG.Application.Interfaces.Services;
 using CarpetBG.Domain.Entities;
 using CarpetBG.Domain.Enums;
 using CarpetBG.Shared;
+using CarpetBG.Shared.Constants;
 
 namespace CarpetBG.Application.Services;
 
@@ -22,8 +23,27 @@ public class OrderService(
     public async Task<Result<PaginatedResult<OrderDto>>> GetFilteredAsync(OrderFilterDto filter)
     {
         var (items, totalCount) = await repository.GetFilteredAsync(filter);
+        try
+        {
+            var c = (int)Math.Ceiling(totalCount / (double)filter.PageSize);
+            var h = filter.PageIndex > PaginationConstants.DefaultPageIndex;
+            var k = filter.PageIndex + 1 < c;
+            var paginated = orderFactory.CreatePaginatedResult(items, totalCount, filter.PageIndex, filter.PageSize);
 
-        var paginated = new PaginatedResult<OrderDto>(items, totalCount, filter.PageIndex, filter.PageSize);
+            return Result<PaginatedResult<OrderDto>>.Success(paginated);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return Result<PaginatedResult<OrderDto>>.Failure(ex.Message);
+        }
+    }
+
+    public async Task<Result<PaginatedResult<OrderDto>>> GetSetupLogisticDataAsync(OrderFilterDto filter)
+    {
+        var (items, totalCount) = await repository.GetSetupLogisticDataAsync(filter);
+
+        var paginated = orderFactory.CreatePaginatedResult(items, totalCount, filter.PageIndex, filter.PageSize);
 
         return Result<PaginatedResult<OrderDto>>.Success(paginated);
     }
@@ -98,6 +118,51 @@ public class OrderService(
         return Result<Guid>.Success(order.Id);
     }
 
+    public async Task<Result<List<OrderDto>>> SetOrderByAsync(List<OrderDto> request)
+    {
+        if (request == null || request.Count == 0)
+        {
+            return Result<List<OrderDto>>.Success(new List<OrderDto>());
+        }
+
+        var ids = request.Where(i => i.OrderBy.HasValue).Select(i => i.Id).ToList();
+
+        if (request.Count != ids.Count)
+        {
+            return Result<List<OrderDto>>.Failure("One or more orders have missing order by value.");
+        }
+
+        var entities = await repository.GetByIdsAsync(
+            ids,
+            needTracking: true,
+            includeDeleted: false
+        );
+
+        if (entities == null || entities.Count != request.Count)
+        {
+            return Result<List<OrderDto>>.Failure(
+                "One or more orders could not be found."
+            );
+        }
+
+        // Build lookup for fast access
+        var orderByLookup = request.ToDictionary(x => x.Id, x => x.OrderBy);
+
+        // Update entities (tracked by EF)
+        foreach (var entity in entities)
+        {
+            entity.OrderBy = orderByLookup[entity.Id];
+        }
+
+        var updated = await repository.UpdateRangeAsync(entities);
+
+        var result = updated
+            .Select(orderFactory.CreateFromEntity)
+            .ToList();
+
+        return Result<List<OrderDto>>.Success(result);
+    }
+
     public async Task<Result<Guid>> UpdateOrderStatusAsync(Guid id, UpdateOrderStatusDto dto)
     {
         var order = await repository.GetByIdAsync(id, needTrackiing: true);
@@ -165,7 +230,7 @@ public class OrderService(
                     canUpdateManualyOrderStatus = true;
                 }
                 break;
-            case OrderStatuses.WashinginProgress:
+            case OrderStatuses.WashingInProgress:
                 if (dto.NextStatus == OrderStatuses.PickupComplete)
                 {
                     order.Status = dto.NextStatus;
@@ -195,13 +260,21 @@ public class OrderService(
             return Result<Guid>.Failure("Ordr was not found");
         }
 
-        if (order.Status != OrderStatuses.WashingComplete)
+        List<OrderStatuses> allowedStatuses =
+        [
+            OrderStatuses.WashingComplete,
+            OrderStatuses.PendingPickup,
+            OrderStatuses.PendingDelivery,
+            OrderStatuses.New
+        ];
+
+        if (!allowedStatuses.Contains(order.Status))
         {
             return Result<Guid>.Failure("Order cannot be updated. Incorrect status.");
         }
 
-        var deliveryAddress = await addressRepository.GetByIdAsync(dto.DeliveryAddressId, order.UserId);
-        if (deliveryAddress == null)
+        var address = await addressRepository.GetByIdAsync(dto.AddressId, order.UserId);
+        if (address == null)
         {
             return Result<Guid>.Failure("Address was not found");
         }
@@ -258,6 +331,36 @@ public class OrderService(
         return Result<Guid>.Success(id);
     }
 
+    public async Task<Result<Guid>> CompleteWashingAsync(Guid id)
+    {
+        var order = await repository.GetByIdAsync(id, needTrackiing: true, includeItems: true);
+        if (order == null)
+        {
+            return Result<Guid>.Failure("Order was not found");
+        }
+
+        if (order.Status != OrderStatuses.WashingInProgress)
+        {
+            return Result<Guid>.Failure("Order cannot be updated. Incorrect status.");
+        }
+
+
+        var orderItems = order.Items;
+        var isWashingCoomplete = order.Items
+            .All(i => i.Status == OrderItemStatuses.WashingComplete);
+
+        if (!isWashingCoomplete)
+        {
+            return Result<Guid>.Failure("Some of the order items ahs not completed washing");
+        }
+
+        order.Status = OrderStatuses.WashingComplete;
+
+        await repository.UpdateAsync(order);
+
+        return Result<Guid>.Success(id);
+    }
+
     private async Task<string?> ValidateOrderItemsAsync(List<OrderItemDto> items)
     {
         var orderItemsErrors = items
@@ -267,24 +370,26 @@ public class OrderService(
             .Select((x) => x.error != null ? $"{x.index + 1}. {x.error}" : null)
             .ToList();
 
-        if (orderItemsErrors.Any())
+        var separator = ", ";
+
+        if (orderItemsErrors.Count != 0)
         {
-            return string.Join(", ", orderItemsErrors);
+            return string.Join(separator, orderItemsErrors);
         }
 
-        string error = null!;
+        List<string> errors = [];
 
         for (var i = 0; i < items.Count; i++)
         {
             var item = items[i];
             var entity = await productRepository.GetByIdAsync(item.ProductId);
-            if (entity == null)
+            if (entity == null || entity.IsDeleted)
             {
-                error = $"The cleaning type for {i + 1}. does not exist.";
-                break;
+                errors.Add($"The product with ID {item.ProductId} does not exist.");
+                continue;
             }
         }
 
-        return error;
+        return errors.Count != 0 ? string.Join(separator, errors) : null;
     }
 }

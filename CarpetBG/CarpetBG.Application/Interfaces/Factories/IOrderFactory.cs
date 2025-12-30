@@ -3,7 +3,7 @@ using CarpetBG.Domain.Entities;
 
 namespace CarpetBG.Application.Interfaces.Factories;
 
-public interface IOrderFactory
+public interface IOrderFactory : IBaseFactory
 {
     Order CreateFromDto(CreateOrderDto dto, List<IAddition> orderAdditions);
     OrderDto CreateFromEntity(Order order);

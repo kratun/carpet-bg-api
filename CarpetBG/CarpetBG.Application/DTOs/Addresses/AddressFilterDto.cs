@@ -2,5 +2,5 @@
 
 namespace CarpetBG.Application.DTOs.Addresses;
 
-public class AddressFilterDto : BaseFilter
+public class AddressFilterDto : BaseFilter<AddressFilter>
 { }

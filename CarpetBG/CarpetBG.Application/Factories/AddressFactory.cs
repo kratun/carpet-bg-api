@@ -4,7 +4,7 @@ using CarpetBG.Domain.Entities;
 
 namespace CarpetBG.Application.Factories;
 
-public class AddressFactory : IAddressFactory
+public class AddressFactory : BaseFactory, IAddressFactory
 {
     public Address CreateFromDto(CreateAddressDto dto)
     {
