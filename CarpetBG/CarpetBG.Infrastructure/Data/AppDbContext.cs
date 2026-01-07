@@ -1,6 +1,6 @@
 ﻿using CarpetBG.Application.Interfaces.Common;
 using CarpetBG.Domain.Entities;
-using CarpetBG.Infrastructure.Data.Configurations;
+using CarpetBG.Infrastructure.Data.Extensions;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -16,40 +16,57 @@ public class AppDbContext : DbContext
         _dateTimeProvider = dateTimeProvider;
     }
 
-    public DbSet<Address> Addresses { get; set; }
-    public DbSet<Order> Orders { get; set; }
-    public DbSet<OrderItem> OrderItems { get; set; }
-    public DbSet<Addition> Additions { get; set; }
-    public DbSet<User> Users { get; set; }
-    public DbSet<Product> Products { get; set; }
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<Address> Addresses => Set<Address>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<Addition> Additions => Set<Addition>();
+    public DbSet<User> Users => Set<User>();
+
+    public override int SaveChanges()
+    {
+        ApplyAuditData();
+
+        return base.SaveChanges();
+    }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var entries = ChangeTracker.Entries<BaseEntity>();
+        ApplyAuditData();
+
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void ApplyAuditData()
+    {
         var auditDate = _dateTimeProvider.UtcNow;
+        var loggedUserId = null ?? "system";
+        var entries = ChangeTracker.Entries<BaseEntity>();
         foreach (var entry in entries)
         {
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedAt = auditDate;
+                entry.Entity.CreatedBy = loggedUserId;
                 entry.Entity.UpdatedAt = auditDate;
+                entry.Entity.UpdatedBy = loggedUserId;
             }
 
             if (entry.State == EntityState.Modified)
             {
                 entry.Entity.UpdatedAt = auditDate;
+                entry.Entity.UpdatedBy = loggedUserId;
+
                 entry.Property(e => e.CreatedAt).IsModified = false;
             }
         }
-
-        return base.SaveChangesAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfiguration(new UserConfiguration());
-        modelBuilder.ApplyConfiguration(new OrderConfiguration());
-        modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
-        modelBuilder.ApplyConfiguration(new AdditionConfiguration());
+        modelBuilder.ApplyConfigurations();
     }
 }

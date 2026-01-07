@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 using CarpetBG.API.Extensions;
 using CarpetBG.API.Middleware;
 using CarpetBG.Infrastructure;
+using CarpetBG.Infrastructure.Data;
+using CarpetBG.Infrastructure.Seeders;
 using CarpetBG.Shared.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,6 +50,20 @@ var app = builder.Build();
 app.UseCors(CorsPolicies.Default);
 
 app.UseMiddleware<ResultMiddleware>();
+
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+{
+    using var scope = app.Services.CreateScope();
+
+    //var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    //await db.Database.MigrateAsync();
+
+    DBInitializer.MigrateDatabase(app.Services);
+
+    var seeder = scope.ServiceProvider.GetRequiredService<ISeederService>();
+    await seeder.SeedAllAsync();
+}
+
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();

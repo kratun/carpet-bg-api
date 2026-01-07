@@ -1,12 +1,12 @@
-﻿using CarpetBG.Application.DTOs.Users;
+﻿using CarpetBG.Application.DTOs.Customers;
 using CarpetBG.Application.Interfaces.Factories;
 using CarpetBG.Domain.Entities;
 
 namespace CarpetBG.Application.Factories;
 
-public class UserFactory : BaseFactory, IUserFactory
+public class CustomerFactory : BaseFactory, ICustomerFactory
 {
-    public User CreateFromDto(CreateUserDto dto)
+    public Customer CreateFromDto(CreateCustomerDto dto)
     {
         return new()
         {
@@ -16,7 +16,7 @@ public class UserFactory : BaseFactory, IUserFactory
         };
     }
 
-    public UserDto CreateFromEntity(User entity)
+    public CustomerDto CreateFromEntity(Customer entity)
     {
         throw new NotImplementedException();
     }

@@ -13,25 +13,19 @@ public class OrderItemDtoValidator : IValidator<OrderItemDto>
             return "OrderItemDto cannot be null.";
         }
 
-        if (dto.Diagonal <= OrderItemValidationConstants.DefaultMeasurementValue
-            && dto.Height <= OrderItemValidationConstants.DefaultMeasurementValue
-            && dto.Width <= OrderItemValidationConstants.DefaultMeasurementValue)
+        if (!dto.Width.HasValue)
         {
-            return "Height and Width must be greater than 0, or Diagonal must be greater than 0.";
+            return "Width is required.";
         }
 
-        if (dto.Height > OrderItemValidationConstants.DefaultMeasurementValue
-            && dto.Width > OrderItemValidationConstants.DefaultMeasurementValue
-            && dto.Diagonal > OrderItemValidationConstants.DefaultMeasurementValue)
+        if (dto.Width.Value <= OrderItemValidationConstants.DefaultMeasurementValue)
         {
-            return "Diagonal must be empty.";
+            return "Width must be greater than 0";
         }
 
-        if (dto.Diagonal > OrderItemValidationConstants.DefaultMeasurementValue
-            && (dto.Height > OrderItemValidationConstants.DefaultMeasurementValue
-                || dto.Width > OrderItemValidationConstants.DefaultMeasurementValue))
+        if (dto.Height.HasValue && dto.Height.Value <= OrderItemValidationConstants.DefaultMeasurementValue)
         {
-            return "Height or Width must be empty.";
+            return "Height must be greater than 0";
         }
 
         // TODO Add Addition validator

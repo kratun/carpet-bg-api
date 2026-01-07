@@ -24,7 +24,7 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
         {
             var searchTermNormalized = filter.SearchTerm.Trim().ToLowerInvariant();
             query = query.Where(i =>
-                (i.User != null && i.User.PhoneNumber.Contains(searchTermNormalized, StringComparison.InvariantCultureIgnoreCase))
+                (i.Customer != null && i.Customer.PhoneNumber.Contains(searchTermNormalized, StringComparison.InvariantCultureIgnoreCase))
                 || i.DisplayAddress.Contains(searchTermNormalized, StringComparison.InvariantCultureIgnoreCase));
         }
 
@@ -39,9 +39,9 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
              {
                  Id = i.Id,
                  DisplayAddress = i.DisplayAddress,
-                 PhoneNumber = i.User.PhoneNumber,
-                 UserFullName = i.User.FullName,
-                 UserId = i.UserId
+                 PhoneNumber = i.Customer.PhoneNumber,
+                 CustomerFullName = i.Customer.FullName,
+                 CustomerId = i.CustomerId
              })
              .ToListAsync();
 
@@ -50,7 +50,7 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
     public async Task<Address?> GetByIdAsync(Guid id, bool includeDeleted = false, bool needTrackiing = false)
     {
         var query = context.Addresses
-            .Include(i => i.User)
+            .Include(i => i.Customer)
             .AsQueryable();
 
         if (!needTrackiing)
@@ -63,10 +63,10 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
         return address;
     }
 
-    public async Task<Address?> GetByIdAsync(Guid id, Guid userId, bool includeDeleted = false, bool needTrackiing = false)
+    public async Task<Address?> GetByIdAsync(Guid id, Guid customerId, bool includeDeleted = false, bool needTrackiing = false)
     {
         var query = context.Addresses
-            .Include(i => i.User)
+            .Include(i => i.Customer)
             .AsQueryable();
 
         if (!needTrackiing)
@@ -74,7 +74,7 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
             query = query.AsNoTracking();
         }
 
-        var address = await query.FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId && (includeDeleted || !i.IsDeleted));
+        var address = await query.FirstOrDefaultAsync(i => i.Id == id && i.CustomerId == customerId && (includeDeleted || !i.IsDeleted));
 
         return address;
     }

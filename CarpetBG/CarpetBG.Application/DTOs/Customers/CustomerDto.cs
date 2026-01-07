@@ -1,8 +1,8 @@
 ﻿using CarpetBG.Application.DTOs.Addresses;
 
-namespace CarpetBG.Application.DTOs.Users;
+namespace CarpetBG.Application.DTOs.Customers;
 
-public class UserDto
+public class CustomerDto
 {
     public Guid Id { get; set; }
     public string FullName { get; set; } = string.Empty;

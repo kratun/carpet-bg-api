@@ -13,7 +13,6 @@ public class OrderItemFactory : BaseFactory, IOrderItemFactory
         return new()
         {
             Id = dto.Id ?? Guid.NewGuid(),
-            Diagonal = dto.Diagonal,
             Height = dto.Height,
             Width = dto.Width,
             Price = dto.Price,
@@ -38,7 +37,6 @@ public class OrderItemFactory : BaseFactory, IOrderItemFactory
         return new()
         {
             Id = entity.Id,
-            Diagonal = entity.Diagonal,
             Height = entity.Height,
             Width = entity.Width,
             Price = entity.Price,

@@ -14,8 +14,8 @@ public class Order : BaseEntity
     public string DeliveryTimeRange { get; set; } = string.Empty;
     public DateTime? DeliveryDate { get; set; }
     public int? OrderBy { get; set; }
-    public Guid UserId { get; set; }
-    public virtual User User { get; set; } = null!;
+    public Guid CustomerId { get; set; }
+    public virtual Customer Customer { get; set; } = null!;
     public OrderStatuses Status { get; set; }
     public string Note { get; set; } = string.Empty;
     public List<OrderItem> Items { get; set; } = [];

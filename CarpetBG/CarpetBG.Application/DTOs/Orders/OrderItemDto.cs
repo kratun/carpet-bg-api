@@ -10,11 +10,10 @@ public class OrderItemDto
     public Guid ProductId { get; set; }
     public decimal? Width { get; set; }
     public decimal? Height { get; set; }
-    public decimal? Diagonal { get; set; }
-    public bool IsSquare => !Diagonal.HasValue;
+    public bool IsSquare => Width.HasValue && !Height.HasValue;
     public decimal Price { get; set; }
     public string Note { get; set; } = string.Empty;
     public OrderItemStatuses Status { get; set; }
     public List<AdditionDto> Additions { get; set; } = [];
-    public decimal Amount => OrderItemHelper.CalculateAmount(Price, Width, Height, Diagonal, Additions);
+    public decimal Amount => OrderItemHelper.CalculateAmount(Price, Width, Height, Additions);
 }

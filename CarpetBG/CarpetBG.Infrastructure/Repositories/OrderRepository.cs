@@ -42,7 +42,7 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
         {
             var searchTermNormalized = incomingFilter.SearchTerm.Trim().ToLowerInvariant();
             query = query.Where(i =>
-                (i.User != null && i.User.PhoneNumber.ToLower().Contains(searchTermNormalized))
+                (i.Customer != null && i.Customer.PhoneNumber.ToLower().Contains(searchTermNormalized))
                 || i.PickupAddress.DisplayAddress.Contains(searchTermNormalized));
         }
 
@@ -90,9 +90,9 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
                 PickupAddress = i.PickupAddress.DisplayAddress,
                 PickupDate = i.PickupDate,
                 PickupAddressId = i.PickupAddressId,
-                CustomerId = i.UserId,
-                PhoneNumber = i.User.PhoneNumber,
-                CustomerFullName = i.User.FullName,
+                CustomerId = i.CustomerId,
+                PhoneNumber = i.Customer.PhoneNumber,
+                CustomerFullName = i.Customer.FullName,
                 PickupTimeRange = i.PickupTimeRange,
                 Status = i.Status,
                 Note = i.Note,
@@ -104,7 +104,6 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
                 OrderItems = i.Items.Select(oi => new OrderItemDto
                 {
                     Id = oi.Id,
-                    Diagonal = oi.Diagonal,
                     Height = oi.Height,
                     Note = oi.Note,
                     Price = oi.Price,
@@ -138,7 +137,7 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
         {
             var searchTermNormalized = incomingFilter.SearchTerm.Trim().ToLowerInvariant();
             query = query.Where(i =>
-                (i.User != null && i.User.PhoneNumber.ToLower().Contains(searchTermNormalized))
+                (i.Customer != null && i.Customer.PhoneNumber.ToLower().Contains(searchTermNormalized))
                 || i.PickupAddress.DisplayAddress.ToLowerInvariant().Contains(searchTermNormalized));
         }
 
@@ -200,9 +199,9 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
                 PickupAddress = i.PickupAddress.DisplayAddress,
                 PickupDate = i.PickupDate,
                 PickupAddressId = i.PickupAddressId,
-                CustomerId = i.UserId,
-                PhoneNumber = i.User.PhoneNumber,
-                CustomerFullName = i.User.FullName,
+                CustomerId = i.CustomerId,
+                PhoneNumber = i.Customer.PhoneNumber,
+                CustomerFullName = i.Customer.FullName,
                 PickupTimeRange = i.PickupTimeRange,
                 Status = i.Status,
                 Note = i.Note,
@@ -214,7 +213,6 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
                 OrderItems = i.Items.Select(oi => new OrderItemDto
                 {
                     Id = oi.Id,
-                    Diagonal = oi.Diagonal,
                     Height = oi.Height,
                     Note = oi.Note,
                     Price = oi.Price,
@@ -238,11 +236,11 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
     {
         query = (filter.SortBy, filter.SortDirection) switch
         {
-            (OrderSortBy.FullName, SortDirection.Desc) => query.OrderByDescending(o => o.User.FullName),
-            (OrderSortBy.FullName, SortDirection.Asc) => query.OrderBy(o => o.User.FullName),
+            (OrderSortBy.FullName, SortDirection.Desc) => query.OrderByDescending(o => o.Customer.FullName),
+            (OrderSortBy.FullName, SortDirection.Asc) => query.OrderBy(o => o.Customer.FullName),
 
-            (OrderSortBy.PhoneNumber, SortDirection.Desc) => query.OrderByDescending(o => o.User.PhoneNumber),
-            (OrderSortBy.PhoneNumber, SortDirection.Asc) => query.OrderBy(o => o.User.PhoneNumber),
+            (OrderSortBy.PhoneNumber, SortDirection.Desc) => query.OrderByDescending(o => o.Customer.PhoneNumber),
+            (OrderSortBy.PhoneNumber, SortDirection.Asc) => query.OrderBy(o => o.Customer.PhoneNumber),
 
             (OrderSortBy.PickupDate, SortDirection.Desc) => query.OrderByDescending(o => o.PickupDate),
             (OrderSortBy.PickupDate, SortDirection.Asc) => query.OrderBy(o => o.PickupDate),
@@ -256,7 +254,7 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
     public async Task<Order?> GetByIdAsync(Guid id, bool includeDeleted = false, bool needTrackiing = false, bool includeItems = false)
     {
         var query = context.Orders
-            .Include(o => o.User)
+            .Include(o => o.Customer)
             .Include(o => o.PickupAddress)
             .AsQueryable();
 
@@ -281,7 +279,7 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
     public async Task<List<Order>> GetByIdsAsync(IEnumerable<Guid> ids, bool includeDeleted = false, bool needTracking = false, bool includeItems = false)
     {
         var query = context.Orders
-            .Include(o => o.User)
+            .Include(o => o.Customer)
             .Include(o => o.PickupAddress)
             .AsQueryable();
 

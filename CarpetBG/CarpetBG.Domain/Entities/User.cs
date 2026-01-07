@@ -1,10 +1,9 @@
-﻿namespace CarpetBG.Domain.Entities
+﻿namespace CarpetBG.Domain.Entities;
+
+public class User : BaseEntity
 {
-    public class User : BaseEntity
-    {
-        public string FullName { get; set; } = string.Empty;
-        public string PhoneNumber { get; set; } = string.Empty;
-        public List<Address> Addresses { get; set; } = [];
-        public List<Order> Orders { get; set; } = [];
-    }
+    public string Email { get; set; } = string.Empty;
+    public List<UserRole> UserRoles { get; set; } = [];
+    public Guid? CustomerId { get; set; }
+    public Customer? Customer { get; set; }
 }
