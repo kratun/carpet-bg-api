@@ -145,6 +145,16 @@ public class OrderService(
             );
         }
 
+        var hasInvalidStatus = entities
+            .Any(e => e.Status != OrderStatuses.PendingPickup && e.Status != OrderStatuses.PendingDelivery);
+
+        if (hasInvalidStatus)
+        {
+            return Result<List<OrderDto>>.Failure(
+                "One or more orders have invalid status."
+            );
+        }
+
         // Build lookup for fast access
         var orderByLookup = request.ToDictionary(x => x.Id, x => x.OrderBy);
 
@@ -260,12 +270,17 @@ public class OrderService(
             return Result<Guid>.Failure("Ordr was not found");
         }
 
+        List<OrderStatuses> picupStatses =
+        [
+            OrderStatuses.PendingPickup,
+            OrderStatuses.New
+        ];
+
         List<OrderStatuses> allowedStatuses =
         [
+            ..picupStatses,
             OrderStatuses.WashingComplete,
-            OrderStatuses.PendingPickup,
             OrderStatuses.PendingDelivery,
-            OrderStatuses.New
         ];
 
         if (!allowedStatuses.Contains(order.Status))
@@ -280,7 +295,9 @@ public class OrderService(
         }
 
         orderFactory.UpdateFromDto(dto, order);
-        order.Status = OrderStatuses.PendingDelivery;
+        order.Status = picupStatses.Contains(order.Status)
+            ? OrderStatuses.PendingPickup
+            : OrderStatuses.PendingDelivery;
         await repository.UpdateAsync(order);
 
         return Result<Guid>.Success(order.Id);

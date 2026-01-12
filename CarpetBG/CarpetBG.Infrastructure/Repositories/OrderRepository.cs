@@ -158,12 +158,12 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
 
             var pickupDates = targetStatuses
                 .Where(t => t.Status == OrderStatuses.PendingPickup && t.Date.HasValue)
-                .Select(t => t.Date!.Value)
+                .Select(t => dateTimeProvider.ToUtc(t.Date!.Value))
                 .ToList();
 
             var deliveryDates = targetStatuses
                 .Where(t => t.Status == OrderStatuses.PendingDelivery && t.Date.HasValue)
-                .Select(t => t.Date!.Value)
+                .Select(t => dateTimeProvider.ToUtc(t.Date!.Value))
                 .ToList();
 
 
