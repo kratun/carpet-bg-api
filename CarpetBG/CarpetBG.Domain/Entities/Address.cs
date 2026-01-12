@@ -4,7 +4,7 @@ public class Address : BaseEntity
 {
     public string DisplayAddress { get; set; } = string.Empty;
 
-    public Guid UserId { get; set; }
+    public Guid CustomerId { get; set; }
 
-    public virtual User User { get; set; }
+    public virtual Customer Customer { get; set; } = null!;
 }

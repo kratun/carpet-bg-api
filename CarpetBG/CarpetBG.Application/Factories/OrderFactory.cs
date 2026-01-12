@@ -18,7 +18,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
             PickupDate = dateTimeProvider.ToUtc(dto.PickupDate.Date),
             PickupAddressId = dto.PickupAddressId,
             PickupTimeRange = dto.PickupTimeRange,
-            UserId = dto.CustomerId,
+            CustomerId = dto.CustomerId,
             Status = OrderStatuses.PendingPickup,
             Note = dto.Note ?? string.Empty,// TODO add migration for nullable
             Items = [.. dto.OrderItems.Select(oi => orderItemFactory.CreateFromDto(oi, orderId, orderAdditions))]
@@ -34,14 +34,14 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
         return new()
         {
             Id = order.Id,
-            CustomerId = order.UserId,
-            PhoneNumber = order.User.PhoneNumber,
+            CustomerId = order.CustomerId,
+            PhoneNumber = order.Customer.PhoneNumber,
             PickupAddress = order.PickupAddress.DisplayAddress,
             PickupAddressId = order.PickupAddressId,
             PickupDate = localPickupDate,
             PickupTimeRange = order.PickupTimeRange,
             Status = order.Status,
-            CustomerFullName = order.User.FullName,
+            CustomerFullName = order.Customer.FullName,
         };
     }
 

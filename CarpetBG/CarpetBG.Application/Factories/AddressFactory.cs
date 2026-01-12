@@ -12,7 +12,7 @@ public class AddressFactory : BaseFactory, IAddressFactory
         {
             Id = Guid.NewGuid(),
             DisplayAddress = dto.DisplayAddress,
-            UserId = dto.UserId.HasValue ? dto.UserId.Value : Guid.Empty,
+            CustomerId = dto.CustomerId.HasValue ? dto.CustomerId.Value : Guid.Empty,
         };
     }
 
@@ -22,9 +22,9 @@ public class AddressFactory : BaseFactory, IAddressFactory
         {
             DisplayAddress = address.DisplayAddress,
             Id = address.Id,
-            PhoneNumber = address.User?.PhoneNumber ?? string.Empty,
-            UserFullName = address.User?.FullName ?? string.Empty,
-            UserId = address.UserId
+            PhoneNumber = address.Customer?.PhoneNumber ?? string.Empty,
+            CustomerFullName = address.Customer?.FullName ?? string.Empty,
+            CustomerId = address.CustomerId
         };
     }
 }

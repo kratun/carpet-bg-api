@@ -6,7 +6,6 @@ public class OrderItem : BaseEntity
 {
     public decimal? Width { get; set; }
     public decimal? Height { get; set; }
-    public decimal? Diagonal { get; set; }
     public decimal Price { get; set; }
     public string Note { get; set; } = string.Empty;
     public bool IsDelivered { get; set; } = false;

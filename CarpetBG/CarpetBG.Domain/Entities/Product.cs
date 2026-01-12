@@ -8,5 +8,4 @@ public class Product : BaseEntity
     public string Description { get; set; } = string.Empty;
     public int OrderBy { get; set; }
     public virtual List<OrderItem> OrderItems { get; set; } = [];
-
 }

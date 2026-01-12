@@ -1,6 +1,6 @@
-﻿using CarpetBG.Application.DTOs.Orders;
+﻿using CarpetBG.Application.DTOs.Customers;
+using CarpetBG.Application.DTOs.Orders;
 using CarpetBG.Application.DTOs.Products;
-using CarpetBG.Application.DTOs.Users;
 using CarpetBG.Application.Factories;
 using CarpetBG.Application.Interfaces.Common;
 using CarpetBG.Application.Interfaces.Factories;
@@ -30,8 +30,10 @@ public static class DependencyInjection
         {
 
             var httpContext = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
-            var user = httpContext?.User;
-            var timeZoneId = user?.FindFirst("https://yourdomain.com/timezone")?.Value ?? "Europe/Sofia";
+            var loggedUser = httpContext?.User;
+
+            // TODO handle timezone properly and fallback to env variable
+            var timeZoneId = loggedUser?.FindFirst("https://yourdomain.com/timezone")?.Value ?? "Europe/Sofia";
 
             TimeZoneInfo tz;
             try
@@ -46,7 +48,8 @@ public static class DependencyInjection
             return new DateTimeProvider(tz);
         });
 
-        services.AddScoped<ISeeder, AdditionSeeder>();
+        services.AddScoped<ISeeder, RoleSeeder>();
+        services.AddScoped<ISeeder, ProductSeeder>();
         services.AddScoped<ISeederService, SeederService>();
         return services;
     }
@@ -54,31 +57,37 @@ public static class DependencyInjection
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         //Validators
-        services.AddScoped<IValidator<CreateUserDto>, CreateUserDtoValidator>();
+        services.AddScoped<IValidator<CreateCustomerDto>, CreateCustomerDtoValidator>();
         services.AddScoped<IValidator<OrderItemDto>, OrderItemDtoValidator>();
         services.AddScoped<IValidator<ProductDto>, ProductDtoValidator>();
 
         //Factories
         services.AddScoped<IAddressFactory, AddressFactory>();
         services.AddScoped<IOrderFactory, OrderFactory>();
-        services.AddScoped<IUserFactory, UserFactory>();
+        services.AddScoped<ICustomerFactory, CustomerFactory>();
         services.AddScoped<IOrderItemFactory, OrderItemFactory>();
         services.AddScoped<IProductFactory, ProductFactory>();
 
         // Services
         services.AddScoped<IAddressService, AddressService>();
         services.AddScoped<IOrderService, OrderService>();
-        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IOrderItemService, OrderItemService>();
         services.AddScoped<IProductService, ProductService>();
+
+        // Memory cache
+        services.AddMemoryCache();
 
         return services;
     }
 
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString, npgsql =>
+        {
+            npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+        }));
 
         return services;
     }
@@ -87,7 +96,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IAddressRepository, AddressRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IOrderItemRepository, OrderItemRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
 

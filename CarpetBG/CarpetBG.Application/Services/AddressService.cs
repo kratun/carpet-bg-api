@@ -1,7 +1,7 @@
 ﻿
 
 using CarpetBG.Application.DTOs.Addresses;
-using CarpetBG.Application.DTOs.Users;
+using CarpetBG.Application.DTOs.Customers;
 using CarpetBG.Application.Interfaces.Common;
 using CarpetBG.Application.Interfaces.Factories;
 using CarpetBG.Application.Interfaces.Repositories;
@@ -10,25 +10,25 @@ using CarpetBG.Shared;
 
 namespace CarpetBG.Application.Services;
 
-public class AddressService(IAddressRepository addressRepository, IUserRepository userRepository, IAddressFactory addressFactory, IUserFactory userFactory, IValidator<CreateUserDto> userValidator) : IAddressService
+public class AddressService(IAddressRepository addressRepository, ICustomerRepository customerRepository, IAddressFactory addressFactory, ICustomerFactory customerFactory, IValidator<CreateCustomerDto> createCustomerValidator) : IAddressService
 {
     public async Task<Result<AddressDto>> CreateAddressAsync(CreateAddressDto dto)
     {
         // Validation
 
-        var user = await userRepository.GetByPhoneAsync(dto.PhoneNumber);
-        if (user == null)
+        var customer = await customerRepository.GetByPhoneAsync(dto.PhoneNumber);
+        if (customer == null)
         {
-            var userDto = new CreateUserDto { FullName = dto.UserFullName, PhoneNumber = dto.PhoneNumber };
-            var error = userValidator.Validate(userDto);
+            var customerDto = new CreateCustomerDto { FullName = dto.CustomerFullName, PhoneNumber = dto.PhoneNumber };
+            var error = createCustomerValidator.Validate(customerDto);
             if (error is not null)
             {
                 return Result<AddressDto>.Failure(error);
             }
 
-            user = await userRepository.AddAsync(userFactory.CreateFromDto(userDto));
+            customer = await customerRepository.AddAsync(customerFactory.CreateFromDto(customerDto));
         }
-        dto.UserId = user.Id;
+        dto.CustomerId = customer.Id;
         var address = addressFactory.CreateFromDto(dto);
         await addressRepository.AddAsync(address);
         return Result<AddressDto>.Success(addressFactory.CreateFromEntity(address));

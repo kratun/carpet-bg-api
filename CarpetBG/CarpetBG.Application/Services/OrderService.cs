@@ -13,7 +13,7 @@ namespace CarpetBG.Application.Services;
 
 public class OrderService(
     IOrderRepository repository,
-    IUserRepository userRepository,
+    ICustomerRepository customerRepository,
     IAddressRepository addressRepository,
     IProductRepository productRepository,
     IOrderFactory orderFactory,
@@ -62,14 +62,14 @@ public class OrderService(
 
     public async Task<Result<Guid>> CreateOrderAsync(CreateOrderDto dto)
     {
-        var customer = await userRepository.GetByIdAsync(dto.CustomerId);
+        var customer = await customerRepository.GetByIdAsync(dto.CustomerId);
         if (customer == null)
         {
             return Result<Guid>.Failure("Customer with such data does not exists");
         }
 
         var address = await addressRepository.GetByIdAsync(dto.PickupAddressId);
-        if (address == null || address.UserId != dto.CustomerId)
+        if (address == null || address.CustomerId != dto.CustomerId)
         {
             return Result<Guid>.Failure("Customer with such address does not exists");
         }
@@ -142,6 +142,16 @@ public class OrderService(
         {
             return Result<List<OrderDto>>.Failure(
                 "One or more orders could not be found."
+            );
+        }
+
+        var hasInvalidStatus = entities
+            .Any(e => e.Status != OrderStatuses.PendingPickup && e.Status != OrderStatuses.PendingDelivery);
+
+        if (hasInvalidStatus)
+        {
+            return Result<List<OrderDto>>.Failure(
+                "One or more orders have invalid status."
             );
         }
 
@@ -260,12 +270,17 @@ public class OrderService(
             return Result<Guid>.Failure("Ordr was not found");
         }
 
+        List<OrderStatuses> picupStatses =
+        [
+            OrderStatuses.PendingPickup,
+            OrderStatuses.New
+        ];
+
         List<OrderStatuses> allowedStatuses =
         [
+            ..picupStatses,
             OrderStatuses.WashingComplete,
-            OrderStatuses.PendingPickup,
             OrderStatuses.PendingDelivery,
-            OrderStatuses.New
         ];
 
         if (!allowedStatuses.Contains(order.Status))
@@ -273,14 +288,16 @@ public class OrderService(
             return Result<Guid>.Failure("Order cannot be updated. Incorrect status.");
         }
 
-        var address = await addressRepository.GetByIdAsync(dto.AddressId, order.UserId);
+        var address = await addressRepository.GetByIdAsync(dto.AddressId, order.CustomerId);
         if (address == null)
         {
             return Result<Guid>.Failure("Address was not found");
         }
 
         orderFactory.UpdateFromDto(dto, order);
-        order.Status = OrderStatuses.PendingDelivery;
+        order.Status = picupStatses.Contains(order.Status)
+            ? OrderStatuses.PendingPickup
+            : OrderStatuses.PendingDelivery;
         await repository.UpdateAsync(order);
 
         return Result<Guid>.Success(order.Id);
@@ -312,7 +329,7 @@ public class OrderService(
         }
 
         var targetAmount = targetItems
-            .Sum(i => OrderItemHelper.CalculateAmount(i.Price, i.Width, i.Height, i.Diagonal, i.Additions.AsEnumerable<IAddition>()));
+            .Sum(i => OrderItemHelper.CalculateAmount(i.Price, i.Width, i.Height, i.Additions.AsEnumerable<IAddition>()));
 
         if (dto.PaidAmount != targetAmount)
         {

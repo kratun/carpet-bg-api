@@ -5,7 +5,7 @@ namespace CarpetBG.Application.Helpers;
 
 public static class OrderItemHelper
 {
-    public static decimal CalculateAmount(decimal price, decimal? width, decimal? height, decimal? diagonal, IEnumerable<IAddition> additions)
+    public static decimal CalculateAmount(decimal price, decimal? width, decimal? height, IEnumerable<IAddition> additions)
     {
         var currentAmount = decimal.Zero;
         if (width.HasValue && height.HasValue)
@@ -13,9 +13,9 @@ public static class OrderItemHelper
             currentAmount = width.Value * height.Value * price;
         }
 
-        if (diagonal.HasValue)
+        if (width.HasValue)
         {
-            currentAmount = diagonal.Value * price;
+            currentAmount = width.Value * width.Value * price;
         }
 
         currentAmount = ApplyAdditions(currentAmount, additions);
