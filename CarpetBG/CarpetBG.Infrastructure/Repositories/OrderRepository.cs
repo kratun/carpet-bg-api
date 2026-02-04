@@ -62,15 +62,16 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
 
             query = query.Where(i => unrestrictedStatuses.Contains(i.Status));
 
-            DateTime? pickupDate = filter!.PickupDate.HasValue ? dateTimeProvider.ToUtc(filter!.PickupDate.Value.Date) : null;
+            DateTime? pickupDate = filter!.PickupDate.HasValue ? filter!.PickupDate.Value.Date : null;
             DateTime? nextPickupDay = pickupDate.HasValue ? pickupDate.Value.AddDays(1) : null;
 
-            DateTime? deliveryDate = filter!.DeliveryDate.HasValue ? dateTimeProvider.ToUtc(filter!.DeliveryDate.Value.Date) : null;
+            DateTime? deliveryDate = filter!.DeliveryDate.HasValue ? filter!.DeliveryDate.Value.Date : null;
             DateTime? nextDeliveryDay = deliveryDate.HasValue ? deliveryDate.Value.AddDays(1) : null;
 
-            query = query.Where(i => (!pickupDate.HasValue && !deliveryDate.HasValue)
-            || (pickupDate.HasValue && i.PickupDate >= pickupDate.Value && i.PickupDate < nextPickupDay)
-            || (deliveryDate.HasValue && i.DeliveryDate >= deliveryDate && i.DeliveryDate < nextDeliveryDay));
+            query = query.Where(i =>
+                   (!pickupDate.HasValue && !deliveryDate.HasValue)
+                   || (deliveryDate.HasValue && i.DeliveryDate >= deliveryDate && i.DeliveryDate < nextDeliveryDay)
+                   || (pickupDate.HasValue && i.PickupDate >= pickupDate.Value && i.PickupDate < nextPickupDay));
         }
 
         var totalCount = await query.CountAsync();

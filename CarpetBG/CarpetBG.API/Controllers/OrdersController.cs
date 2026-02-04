@@ -1,6 +1,8 @@
 ﻿using CarpetBG.Application.DTOs.Orders;
 using CarpetBG.Application.Interfaces.Services;
+using CarpetBG.Infrastructure.Authorization;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarpetBG.API.Controllers;
@@ -10,7 +12,7 @@ namespace CarpetBG.API.Controllers;
 public class OrdersController(IOrderService orderService, IOrderItemService orderItemService) : ControllerBase
 {
     [HttpGet]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> GetAll([FromQuery] OrderFilterDto dto)
     {
         var result = await orderService.GetFilteredAsync(dto);
@@ -18,7 +20,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     }
 
     [HttpGet("setup-logistic-data")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> GetSetupLogistic([FromQuery] OrderFilterDto dto)
     {
         var result = await orderService.GetSetupLogisticDataAsync(dto);
@@ -27,7 +29,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
 
     [HttpGet]
     [Route("{id}")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
         var result = await orderService.GetByIdAsync(id);
@@ -35,7 +37,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     }
 
     [HttpPost]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
     {
         var result = await orderService.CreateOrderAsync(dto);
@@ -44,16 +46,24 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
 
     [HttpPost]
     [Route("{id}/order-items")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> AddOrderItem([FromRoute] Guid id, [FromBody] OrderItemDto dto)
     {
         var result = await orderItemService.AddAsync(dto, id);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
+    [HttpPut("{id}")]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
+    public async Task<IActionResult> Update([FromRoute] string id, [FromBody] CreateOrderDto dto)
+    {
+        var result = await orderService.CreateOrderAsync(dto);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
     [HttpPut]
     [Route("reorder")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> Reorder([FromBody] List<OrderDto> dtos)
     {
         var result = await orderService.SetOrderByAsync(dtos);
@@ -62,7 +72,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
 
     [HttpPut]
     [Route("{orderId}/order-items/{id}")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> UpdateOrderItem([FromRoute] Guid orderId, [FromRoute] Guid id, [FromBody] OrderItemDto dto)
     {
         var result = await orderItemService.UpdateAsync(id, dto, orderId);
@@ -71,7 +81,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
 
     [HttpPut]
     [Route("{orderId}/order-items/{id}/complete-washing")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> CompleteWashingOrderItem([FromRoute] Guid orderId, [FromRoute] Guid id)
     {
         var result = await orderItemService.CompleteWashingAsync(id, orderId);
@@ -80,7 +90,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
 
     [HttpPut]
     [Route("{id}/status")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> UpdateStatus([FromRoute] Guid id, [FromBody] UpdateOrderStatusDto dto)
     {
         var result = await orderService.UpdateOrderStatusAsync(id, dto);
@@ -89,7 +99,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
 
     [HttpPut]
     [Route("{id}/status-revert")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> RevertStatus([FromRoute] Guid id, [FromBody] UpdateOrderStatusDto dto)
     {
         var result = await orderService.RevertOrderStatusAsync(id, dto);
@@ -98,7 +108,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
 
     [HttpPut]
     [Route("{id}/delivery-data")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> AddDeliveryData([FromRoute] Guid id, [FromBody] OrderDeliveryDataDto dto)
     {
         var result = await orderService.AddDeliveryDataAsync(id, dto);
@@ -107,7 +117,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
 
     [HttpPut]
     [Route("{id}/delivery-confirm")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> ConfirmDelivery([FromRoute] Guid id, [FromBody] OrderDeliveryConfirmDto dto)
     {
         var result = await orderService.ConfirmDeliveryAsync(id, dto);
@@ -116,7 +126,7 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
 
     [HttpPut]
     [Route("{id}/complete-washing")]
-    //[Authorize]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
     public async Task<IActionResult> CompleteWashingAsync([FromRoute] Guid id)
     {
         var result = await orderService.CompleteWashingAsync(id);

@@ -15,8 +15,13 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
         builder.ApplyAuditable();
 
         builder
-            .HasKey(x => new { x.UserId, x.RoleId })
+            .HasKey(x => x.Id)
             .HasName("pk_user_roles");
+
+        builder.Property(u => u.Id)
+               .HasColumnName("user_role_id")
+               .HasColumnType("uuid")
+               .IsRequired();
 
         builder
             .Property(x => x.UserId)
@@ -32,7 +37,7 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
 
         builder
             .HasOne(x => x.User)
-            .WithMany(x => x.UserRoles)
+            .WithMany(nameof(User.Roles))
             .HasForeignKey(x => x.UserId)
             .HasConstraintName("fk_user_roles_user_id")
             .OnDelete(DeleteBehavior.Restrict);

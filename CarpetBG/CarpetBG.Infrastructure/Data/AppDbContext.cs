@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarpetBG.Infrastructure.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : DbContext, IAppDbContext
 {
     private readonly IDateTimeProvider _dateTimeProvider;
 

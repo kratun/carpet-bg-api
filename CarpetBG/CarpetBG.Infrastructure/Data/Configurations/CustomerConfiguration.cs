@@ -56,6 +56,13 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasConstraintName("fk_orders_customer_id")
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder
+            .HasOne(c => c.User)
+            .WithOne(u => u.Customer)
+            .HasForeignKey<Customer>(c => c.UserId)
+            .HasConstraintName("fk_customers_user_id")
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(c => c.PhoneNumber)
             .HasDatabaseName("ix_customers_phone_number");
 

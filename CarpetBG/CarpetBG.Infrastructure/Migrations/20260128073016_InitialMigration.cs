@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CarpetBG.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -52,15 +52,11 @@ namespace CarpetBG.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "additions",
+                name: "users",
                 columns: table => new
                 {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    normalized_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    addition_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    value = table.Column<decimal>(type: "numeric(12,2)", nullable: false),
-                    order_item_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -69,8 +65,62 @@ namespace CarpetBG.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_additions", x => x.id);
-                    table.CheckConstraint("ck_additions_type", "addition_type IN ('appliedaspercentage', 'appliedasamount')");
+                    table.PrimaryKey("pk_users", x => x.user_id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "customers",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    full_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    phone_number = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_customers", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_customers_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "user_id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "user_roles",
+                columns: table => new
+                {
+                    user_role_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    role_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_user_roles", x => x.user_role_id);
+                    table.ForeignKey(
+                        name: "fk_user_roles_role_id",
+                        column: x => x.role_id,
+                        principalTable: "roles",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_user_roles_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "user_id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -89,26 +139,12 @@ namespace CarpetBG.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_addresses", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "customers",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    full_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    phone_number = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
-                    user_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    UserId2 = table.Column<Guid>(type: "uuid", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_customers", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_addresses_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "customers",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -157,30 +193,6 @@ namespace CarpetBG.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "users",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    customer_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_users", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_users_customer_id",
-                        column: x => x.customer_id,
-                        principalTable: "customers",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "order_items",
                 columns: table => new
                 {
@@ -218,11 +230,15 @@ namespace CarpetBG.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "user_roles",
+                name: "additions",
                 columns: table => new
                 {
-                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    role_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    normalized_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    addition_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    value = table.Column<decimal>(type: "numeric(12,2)", nullable: false),
+                    order_item_id = table.Column<Guid>(type: "uuid", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -231,17 +247,12 @@ namespace CarpetBG.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_user_roles", x => new { x.user_id, x.role_id });
+                    table.PrimaryKey("pk_additions", x => x.id);
+                    table.CheckConstraint("ck_additions_type", "addition_type IN ('appliedaspercentage', 'appliedasamount')");
                     table.ForeignKey(
-                        name: "fk_user_roles_role_id",
-                        column: x => x.role_id,
-                        principalTable: "roles",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "fk_user_roles_user_id",
-                        column: x => x.user_id,
-                        principalTable: "users",
+                        name: "fk_additions_order_item_id",
+                        column: x => x.order_item_id,
+                        principalTable: "order_items",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -264,12 +275,8 @@ namespace CarpetBG.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "ix_customers_user_id",
                 table: "customers",
-                column: "user_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_customers_UserId2",
-                table: "customers",
-                column: "UserId2");
+                column: "user_id",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ix_order_items_order_id",
@@ -338,10 +345,9 @@ namespace CarpetBG.Infrastructure.Migrations
                 column: "role_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_users_customer_id",
-                table: "users",
-                column: "customer_id",
-                unique: true);
+                name: "IX_user_roles_user_id",
+                table: "user_roles",
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "ux_users_email_active",
@@ -349,38 +355,11 @@ namespace CarpetBG.Infrastructure.Migrations
                 column: "email",
                 unique: true,
                 filter: "is_deleted = false");
-
-            migrationBuilder.AddForeignKey(
-                name: "fk_additions_order_item_id",
-                table: "additions",
-                column: "order_item_id",
-                principalTable: "order_items",
-                principalColumn: "id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "fk_addresses_customer_id",
-                table: "addresses",
-                column: "customer_id",
-                principalTable: "customers",
-                principalColumn: "id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_customers_users_UserId2",
-                table: "customers",
-                column: "UserId2",
-                principalTable: "users",
-                principalColumn: "id");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "fk_users_customer_id",
-                table: "users");
-
             migrationBuilder.DropTable(
                 name: "additions");
 

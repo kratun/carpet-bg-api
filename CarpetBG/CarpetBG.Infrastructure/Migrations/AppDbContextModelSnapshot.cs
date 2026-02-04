@@ -193,9 +193,6 @@ namespace CarpetBG.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
-                    b.Property<Guid?>("UserId2")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id")
                         .HasName("pk_customers");
 
@@ -203,9 +200,8 @@ namespace CarpetBG.Infrastructure.Migrations
                         .HasDatabaseName("ix_customers_phone_number");
 
                     b.HasIndex("UserId")
+                        .IsUnique()
                         .HasDatabaseName("ix_customers_user_id");
-
-                    b.HasIndex("UserId2");
 
                     b.ToTable("customers", (string)null);
                 });
@@ -536,12 +532,12 @@ namespace CarpetBG.Infrastructure.Migrations
                     b.ToTable("roles", (string)null);
                 });
 
-            modelBuilder.Entity("CarpetBG.Domain.Entities.User", b =>
+            modelBuilder.Entity("CarpetBG.Domain.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("user_role_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -553,9 +549,56 @@ namespace CarpetBG.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("created_by");
 
-                    b.Property<Guid?>("CustomerId")
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<Guid>("RoleId")
                         .HasColumnType("uuid")
-                        .HasColumnName("customer_id");
+                        .HasColumnName("role_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_roles");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_roles", (string)null);
+                });
+
+            modelBuilder.Entity("User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -582,59 +625,12 @@ namespace CarpetBG.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_users");
 
-                    b.HasIndex("CustomerId")
-                        .IsUnique();
-
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("ux_users_email_active")
                         .HasFilter("is_deleted = false");
 
                     b.ToTable("users", (string)null);
-                });
-
-            modelBuilder.Entity("CarpetBG.Domain.Entities.UserRole", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("role_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("created_by");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_deleted");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("updated_by");
-
-                    b.HasKey("UserId", "RoleId")
-                        .HasName("pk_user_roles");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("user_roles", (string)null);
                 });
 
             modelBuilder.Entity("CarpetBG.Domain.Entities.Addition", b =>
@@ -663,9 +659,11 @@ namespace CarpetBG.Infrastructure.Migrations
 
             modelBuilder.Entity("CarpetBG.Domain.Entities.Customer", b =>
                 {
-                    b.HasOne("CarpetBG.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId2");
+                    b.HasOne("User", "User")
+                        .WithOne("Customer")
+                        .HasForeignKey("CarpetBG.Domain.Entities.Customer", "UserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_customers_user_id");
 
                     b.Navigation("User");
                 });
@@ -719,17 +717,6 @@ namespace CarpetBG.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("CarpetBG.Domain.Entities.User", b =>
-                {
-                    b.HasOne("CarpetBG.Domain.Entities.Customer", "Customer")
-                        .WithOne()
-                        .HasForeignKey("CarpetBG.Domain.Entities.User", "CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_users_customer_id");
-
-                    b.Navigation("Customer");
-                });
-
             modelBuilder.Entity("CarpetBG.Domain.Entities.UserRole", b =>
                 {
                     b.HasOne("CarpetBG.Domain.Entities.Role", "Role")
@@ -739,8 +726,8 @@ namespace CarpetBG.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_role_id");
 
-                    b.HasOne("CarpetBG.Domain.Entities.User", "User")
-                        .WithMany("UserRoles")
+                    b.HasOne("User", "User")
+                        .WithMany("Roles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
@@ -778,9 +765,11 @@ namespace CarpetBG.Infrastructure.Migrations
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("CarpetBG.Domain.Entities.User", b =>
+            modelBuilder.Entity("User", b =>
                 {
-                    b.Navigation("UserRoles");
+                    b.Navigation("Customer");
+
+                    b.Navigation("Roles");
                 });
 #pragma warning restore 612, 618
         }
