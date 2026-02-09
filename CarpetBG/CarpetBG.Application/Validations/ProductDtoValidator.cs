@@ -1,11 +1,12 @@
 ﻿using CarpetBG.Application.DTOs.Products;
 using CarpetBG.Application.Interfaces.Common;
+using CarpetBG.Domain.Enums;
 
 namespace CarpetBG.Application.Validations;
 
 public class ProductDtoValidator : IValidator<ProductDto>
 {
-    public string? Validate(ProductDto dto)
+    public string? Validate(ProductDto dto, OrderStatuses? orderStatus = null)
     {
         if (dto == null)
         {

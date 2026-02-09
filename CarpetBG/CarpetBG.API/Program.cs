@@ -4,8 +4,8 @@ using System.Text.Json.Serialization;
 using CarpetBG.API.Extensions;
 using CarpetBG.API.Middleware;
 using CarpetBG.Infrastructure;
+using CarpetBG.Infrastructure.Authentication;
 using CarpetBG.Infrastructure.Data;
-using CarpetBG.Infrastructure.Seeders;
 using CarpetBG.Shared.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,10 +21,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerConfiguration();
 
 builder.Services
-    .AddApplicationServices()
     .AddInfrastructureServices()
     .AddPersistence(builder.Configuration)
-    .AddRepositories();
+    .AddRepositories()
+    .AddApplicationServices()
+    .AddAuthenticationInfrastructure(builder.Configuration);
 
 var allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
@@ -40,10 +41,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configure JWT authentication for local testing with fake token
-builder.Services.AddAuthConfiguration(builder.Configuration);
-
-
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -53,15 +50,22 @@ app.UseMiddleware<ResultMiddleware>();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {
+    // create a proper scope
     using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
 
-    //var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    //await db.Database.MigrateAsync();
+    var logger = services.GetRequiredService<ILogger<Program>>();
 
-    DBInitializer.MigrateDatabase(app.Services);
-
-    var seeder = scope.ServiceProvider.GetRequiredService<ISeederService>();
-    await seeder.SeedAllAsync();
+    try
+    {
+        // 2️⃣ Ensure database exists
+        await DBInitializer.InitializeAsync(services);
+    }
+    catch (Exception ex)
+    {
+        logger.LogCritical(ex, "Database initialization failed.");
+        throw;
+    }
 }
 
 app.UseSwagger();

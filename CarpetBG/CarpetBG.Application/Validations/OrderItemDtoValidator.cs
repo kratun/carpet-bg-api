@@ -1,24 +1,32 @@
 ﻿using CarpetBG.Application.DTOs.Orders;
 using CarpetBG.Application.Interfaces.Common;
 using CarpetBG.Domain.Constants;
+using CarpetBG.Domain.Enums;
 
 namespace CarpetBG.Application.Validations;
 
 public class OrderItemDtoValidator : IValidator<OrderItemDto>
 {
-    public string? Validate(OrderItemDto dto)
+    public string? Validate(OrderItemDto dto, OrderStatuses? orderStatus)
     {
         if (dto == null)
         {
             return "OrderItemDto cannot be null.";
         }
 
-        if (!dto.Width.HasValue)
+        bool hasWidth = dto.Width.HasValue;
+        bool hasHeight = dto.Height.HasValue;
+
+        if (hasWidth ^ hasHeight)
         {
-            return "Width is required.";
+            return "Width and Height must be provided together.";
+        }
+        if (orderStatus.HasValue && orderStatus > OrderStatuses.New && !hasWidth && !hasHeight)
+        {
+            return "Width and Height are required.";
         }
 
-        if (dto.Width.Value <= OrderItemValidationConstants.DefaultMeasurementValue)
+        if (dto.Width.HasValue && dto.Width.Value <= OrderItemValidationConstants.DefaultMeasurementValue)
         {
             return "Width must be greater than 0";
         }

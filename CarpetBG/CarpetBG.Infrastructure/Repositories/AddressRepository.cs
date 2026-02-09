@@ -22,10 +22,10 @@ public class AddressRepository(AppDbContext context) : IAddressRepository
 
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
-            var searchTermNormalized = filter.SearchTerm.Trim().ToLowerInvariant();
+            var searchTermNormalized = filter.SearchTerm.Trim();
             query = query.Where(i =>
-                (i.Customer != null && i.Customer.PhoneNumber.Contains(searchTermNormalized, StringComparison.InvariantCultureIgnoreCase))
-                || i.DisplayAddress.Contains(searchTermNormalized, StringComparison.InvariantCultureIgnoreCase));
+                (i.Customer != null && i.Customer.PhoneNumber.Contains(searchTermNormalized))
+                || i.DisplayAddress.Contains(searchTermNormalized));
         }
 
         var totalCount = await query.CountAsync();

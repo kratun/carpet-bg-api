@@ -5,6 +5,7 @@ namespace CarpetBG.Domain.Entities;
 public class Order : BaseEntity
 {
     public Guid PickupAddressId { get; set; }
+    public long OrderNumber { get; private set; }
     public virtual Address PickupAddress { get; set; } = null!;
     public string? PickupTimeRange { get; set; } = null!;
     public DateTime? PickupDate { get; set; }

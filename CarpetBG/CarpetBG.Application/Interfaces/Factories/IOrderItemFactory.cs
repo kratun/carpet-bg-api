@@ -15,7 +15,7 @@ public interface IOrderItemFactory : IBaseFactory
     /// <param name="isFree"></param>
     /// <returns></returns>
     OrderItem CreateFromDto(OrderItemDto dto, Guid orderId, List<IAddition> orderAdditions, bool isFree = false);
-    OrderItem CreateFromDto(OrderItemDto dto, OrderItem entity, List<IAddition> orderAdditions, bool isFree = false);
+    OrderItem CreateFromDto(OrderItem entity, OrderItemDto dto, Product product, OrderItemStatuses? status = null, List<IAddition>? orderAdditions = null, bool isFree = false);
     OrderItem CreateFromDto(OrderItemStatuses nextOrderItemStatus, OrderItem entity, OrderStatuses nextOrderStatus);
     OrderItemDto CreateFromEntity(OrderItem entity);
 }

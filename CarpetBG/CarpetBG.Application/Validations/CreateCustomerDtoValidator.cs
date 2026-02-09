@@ -1,12 +1,13 @@
 ﻿using CarpetBG.Application.DTOs.Customers;
 using CarpetBG.Application.Interfaces.Common;
 using CarpetBG.Domain.Constants;
+using CarpetBG.Domain.Enums;
 
 namespace CarpetBG.Application.Validations;
 
 public class CreateCustomerDtoValidator : IValidator<CreateCustomerDto>
 {
-    public string? Validate(CreateCustomerDto dto)
+    public string? Validate(CreateCustomerDto dto, OrderStatuses? orderStatus = null)
     {
         if (string.IsNullOrWhiteSpace(dto.FullName))
         {

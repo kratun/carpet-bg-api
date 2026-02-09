@@ -84,6 +84,11 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                .HasMaxLength(1000)
                .IsRequired();
 
+        builder.Property(o => o.OrderNumber)
+               .HasColumnName("order_number")
+               .HasColumnType("bigint")
+               .ValueGeneratedOnAdd();
+
         builder.HasOne(o => o.Customer)
                .WithMany(c => c.Orders)
                .HasForeignKey(o => o.CustomerId)
