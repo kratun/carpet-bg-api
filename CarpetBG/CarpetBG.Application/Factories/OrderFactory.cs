@@ -15,7 +15,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
         return new()
         {
             Id = orderId,
-            PickupDate = dateTimeProvider.ToUtc(dto.PickupDate.Date),
+            PickupDate = dto.PickupDate?.Date,
             PickupAddressId = dto.PickupAddressId,
             PickupTimeRange = dto.PickupTimeRange,
             CustomerId = dto.CustomerId,
@@ -34,6 +34,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
         return new()
         {
             Id = order.Id,
+            OrderNumber = order.OrderNumber,
             CustomerId = order.CustomerId,
             PhoneNumber = order.Customer.PhoneNumber,
             PickupAddress = order.PickupAddress.DisplayAddress,

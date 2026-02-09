@@ -86,6 +86,7 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
             .Select(i => new OrderDto
             {
                 Id = i.Id,
+                OrderNumber = i.OrderNumber,
                 CreatedAt = i.CreatedAt,
                 IsExpress = i.Items.All(i => i.Additions.Any(a => a.NormalizedName == "express")),
                 PickupAddress = i.PickupAddress.DisplayAddress,
@@ -195,6 +196,7 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
             .Select(i => new OrderDto
             {
                 Id = i.Id,
+                OrderNumber = i.OrderNumber,
                 CreatedAt = i.CreatedAt,
                 IsExpress = i.Items.All(i => i.Additions.Any(a => a.NormalizedName == "express")),
                 PickupAddress = i.PickupAddress.DisplayAddress,

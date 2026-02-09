@@ -5,6 +5,7 @@ namespace CarpetBG.Application.DTOs.Orders;
 public class OrderDto
 {
     public Guid Id { get; set; }
+    public long OrderNumber { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsExpress { get; set; }
     public string CustomerFullName { get; set; } = string.Empty;

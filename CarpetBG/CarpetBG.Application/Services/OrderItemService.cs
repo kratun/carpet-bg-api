@@ -12,22 +12,23 @@ namespace CarpetBG.Application.Services;
 public class OrderItemService(
     IOrderItemRepository repository,
     IOrderRepository orderRepository,
+    IProductRepository productRepository,
     IOrderItemFactory factory,
     IValidator<OrderItemDto> orderItemValidator)
     : IOrderItemService
 {
     public async Task<Result<Guid>> AddAsync(OrderItemDto dto, Guid orderId)
     {
-        var error = orderItemValidator.Validate(dto);
-        if (string.IsNullOrEmpty(error))
-        {
-            Result<Guid>.Failure($"The order item has error: {error}.");
-        }
-
         var order = await orderRepository.GetByIdAsync(orderId, needTrackiing: false);
         if (order == null)
         {
             return Result<Guid>.Failure("Order not found.");
+        }
+
+        var error = orderItemValidator.Validate(dto, order.Status);
+        if (string.IsNullOrEmpty(error))
+        {
+            Result<Guid>.Failure($"The order item has error: {error}.");
         }
 
         var additions = dto.Additions.Select(a => new Addition
@@ -71,6 +72,12 @@ public class OrderItemService(
             return Result<Guid>.Failure("Order not found.");
         }
 
+        var error = orderItemValidator.Validate(factory.CreateFromEntity(orderItem), orderItem.Order.Status);
+        if (!string.IsNullOrEmpty(error))
+        {
+            return Result<Guid>.Failure("Order item is not valid: " + error);
+        }
+
         var entity = factory.CreateFromDto(OrderItemStatuses.WashingComplete, orderItem, OrderStatuses.WashingInProgress);
 
         var result = await repository.UpdateAsync(entity);
@@ -85,22 +92,28 @@ public class OrderItemService(
 
     public async Task<Result<Guid>> UpdateAsync(Guid id, OrderItemDto dto, Guid orderId)
     {
-        var error = orderItemValidator.Validate(dto);
-        if (string.IsNullOrEmpty(error))
-        {
-            Result<Guid>.Failure($"The order item has error: {error}.");
-        }
-
         var order = await orderRepository.GetByIdAsync(orderId, needTrackiing: false);
         if (order == null || order.IsDeleted)
         {
             return Result<Guid>.Failure("Order not found.");
         }
 
+        var error = orderItemValidator.Validate(dto, order.Status);
+        if (!string.IsNullOrEmpty(error))
+        {
+            Result<Guid>.Failure($"The order item has error: {error}.");
+        }
+
+        // TODO: check is the satus available for updates
         var orderItem = await repository.GetByIdAsync(id);
-        if (orderItem == null || orderItem.OrderId != orderId)
+        if (orderItem == null || orderItem.IsDeleted || orderItem.OrderId != orderId)
         {
             return Result<Guid>.Failure("Order item not found.");
+        }
+
+        if (orderItem.Status != dto.Status)
+        {
+            return Result<Guid>.Failure($"Order item status cannot be updated from {orderItem.Status} to {dto.Status}.");
         }
 
         var additions = dto.Additions.Select(a => new Addition
@@ -124,7 +137,14 @@ public class OrderItemService(
         //    throw new ArgumentException("Total amount addintion should be greater than zero.");
         //}
 
-        var entity = factory.CreateFromDto(dto, orderId, additions);
+        // TODO: Apply to cuerrnet entity
+        var product = await productRepository.GetByIdAsync(dto.ProductId);
+        if (product == null)
+        {
+            return Result<Guid>.Failure("Product not found.");
+        }
+
+        var entity = factory.CreateFromDto(orderItem, dto, product, orderAdditions: additions);
 
         var result = await repository.UpdateAsync(entity);
 

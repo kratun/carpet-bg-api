@@ -1,4 +1,6 @@
-﻿namespace CarpetBG.Application.Interfaces.Common;
+﻿using CarpetBG.Domain.Enums;
+
+namespace CarpetBG.Application.Interfaces.Common;
 
 public interface IValidator<T>
 {
@@ -6,5 +8,5 @@ public interface IValidator<T>
     /// Returns null or empty string if validation succeeds;
     /// otherwise returns an error message describing the failure.
     /// </summary>
-    string? Validate(T instance);
+    string? Validate(T instance, OrderStatuses? orderStatus = null);
 }

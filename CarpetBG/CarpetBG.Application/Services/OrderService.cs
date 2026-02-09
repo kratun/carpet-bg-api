@@ -74,7 +74,7 @@ public class OrderService(
             return Result<Guid>.Failure("Customer with such address does not exists");
         }
 
-        var error = await ValidateOrderItemsAsync(dto.OrderItems);
+        var error = await ValidateOrderItemsAsync(dto.OrderItems, OrderStatuses.New);
 
         if (!string.IsNullOrEmpty(error))
         {
@@ -378,11 +378,11 @@ public class OrderService(
         return Result<Guid>.Success(id);
     }
 
-    private async Task<string?> ValidateOrderItemsAsync(List<OrderItemDto> items)
+    private async Task<string?> ValidateOrderItemsAsync(List<OrderItemDto> items, OrderStatuses orderStatus)
     {
         var orderItemsErrors = items
             .Select((item, index) => (item, index))
-            .Select(x => (error: orderItemValidator.Validate(x.item), x.index))
+            .Select(x => (error: orderItemValidator.Validate(x.item, orderStatus), x.index))
             .Where(x => x.error != null)
             .Select((x) => x.error != null ? $"{x.index + 1}. {x.error}" : null)
             .ToList();

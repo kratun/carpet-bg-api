@@ -49,9 +49,25 @@ public class OrderItemFactory : BaseFactory, IOrderItemFactory
         };
     }
 
-    public OrderItem CreateFromDto(OrderItemDto dto, OrderItem entity, List<IAddition> orderAdditions, bool isFree = false)
+    public OrderItem CreateFromDto(OrderItem entity, OrderItemDto dto, Product product, OrderItemStatuses? status = null, List<IAddition>? orderAdditions = null, bool isFree = false)
     {
-        throw new NotImplementedException();
+        entity.Height = dto.Height;
+        entity.Width = dto.Width;
+        if (entity.ProductId != dto.ProductId)
+        {
+            entity.ProductId = dto.ProductId;
+            entity.Price = product.Price;
+        }
+
+        entity.Note = dto.Note;
+        if (status.HasValue)
+        {
+            entity.Status = status.Value;
+        }
+
+        // TODO: add additions
+
+        return entity;
     }
 
     public OrderItem CreateFromDto(OrderItemStatuses nextOrderItemStatus, OrderItem entity, OrderStatuses nextOrderStatus)
