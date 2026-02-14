@@ -7,7 +7,6 @@ using CarpetBG.Application.Interfaces.Services;
 using CarpetBG.Domain.Entities;
 using CarpetBG.Domain.Enums;
 using CarpetBG.Shared;
-using CarpetBG.Shared.Constants;
 
 namespace CarpetBG.Application.Services;
 
@@ -25,9 +24,6 @@ public class OrderService(
         var (items, totalCount) = await repository.GetFilteredAsync(filter);
         try
         {
-            var c = (int)Math.Ceiling(totalCount / (double)filter.PageSize);
-            var h = filter.PageIndex > PaginationConstants.DefaultPageIndex;
-            var k = filter.PageIndex + 1 < c;
             var paginated = orderFactory.CreatePaginatedResult(items, totalCount, filter.PageIndex, filter.PageSize);
 
             return Result<PaginatedResult<OrderDto>>.Success(paginated);

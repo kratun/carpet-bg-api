@@ -1,5 +1,4 @@
-﻿using CarpetBG.Domain.Entities;
-using CarpetBG.Infrastructure.Data.Extensions;
+﻿using CarpetBG.Infrastructure.Data.Extensions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

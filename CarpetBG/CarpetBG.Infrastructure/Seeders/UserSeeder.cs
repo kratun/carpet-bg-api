@@ -1,5 +1,4 @@
-﻿
-using CarpetBG.Infrastructure.Data;
+﻿using CarpetBG.Infrastructure.Data;
 using CarpetBG.Infrastructure.Options;
 
 using Microsoft.Extensions.Options;

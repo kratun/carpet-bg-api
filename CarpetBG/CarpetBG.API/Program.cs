@@ -8,6 +8,8 @@ using CarpetBG.Infrastructure.Authentication;
 using CarpetBG.Infrastructure.Data;
 using CarpetBG.Shared.Constants;
 
+using QuestPDF.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers()
@@ -42,6 +44,9 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddAuthorization();
+
+// TODO: Move this to QuestPdfInitializer
+QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 app.UseCors(CorsPolicies.Default);

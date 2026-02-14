@@ -1,6 +1,6 @@
 ﻿namespace CarpetBG.Application.Common;
 
-public static class IQueryableExtensions
+public static class QueryableExtensions
 {
     public static IQueryable<T> ApplyPagination<T>(
         this IQueryable<T> query,
