@@ -1,4 +1,5 @@
-﻿using CarpetBG.Domain.Entities;
+﻿using CarpetBG.Domain.Constants;
+using CarpetBG.Domain.Entities;
 using CarpetBG.Infrastructure.Data.Extensions;
 
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,7 @@ public class AddressConfiguration : IEntityTypeConfiguration<Address>
 
         builder.Property(a => a.DisplayAddress)
                .HasColumnName("display_address")
-               .HasMaxLength(500)
+               .HasMaxLength(CustomerValidationConstants.DisplayAddressMaxLength)
                .IsRequired();
 
         builder.Property(a => a.CustomerId)

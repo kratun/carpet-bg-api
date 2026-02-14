@@ -6,6 +6,7 @@ using CarpetBG.Application.Interfaces.Common;
 using CarpetBG.Application.Interfaces.Factories;
 using CarpetBG.Application.Interfaces.Repositories;
 using CarpetBG.Application.Interfaces.Services;
+using CarpetBG.Domain.Constants;
 using CarpetBG.Shared;
 
 namespace CarpetBG.Application.Services;
@@ -14,7 +15,12 @@ public class AddressService(IAddressRepository addressRepository, ICustomerRepos
 {
     public async Task<Result<AddressDto>> CreateAddressAsync(CreateAddressDto dto)
     {
-        // Validation
+        // Validation        
+        if (dto.DisplayAddress?.Length > CustomerValidationConstants.DisplayAddressMaxLength)
+        {
+            var error = $"The address lenth {dto.DisplayAddress.Length} exceed the max size {CustomerValidationConstants.DisplayAddressMaxLength}";
+            return Result<AddressDto>.Failure(error);
+        }
 
         var customer = await customerRepository.GetByPhoneAsync(dto.PhoneNumber);
         if (customer == null)
@@ -30,7 +36,16 @@ public class AddressService(IAddressRepository addressRepository, ICustomerRepos
         }
         dto.CustomerId = customer.Id;
         var address = addressFactory.CreateFromDto(dto);
-        await addressRepository.AddAsync(address);
+        try
+        {
+            await addressRepository.AddAsync(address);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.Message;
+
+        }
+
         return Result<AddressDto>.Success(addressFactory.CreateFromEntity(address));
     }
 
