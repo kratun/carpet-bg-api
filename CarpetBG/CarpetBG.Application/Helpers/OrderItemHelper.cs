@@ -10,12 +10,17 @@ public static class OrderItemHelper
         var currentAmount = decimal.Zero;
         if (width.HasValue && height.HasValue)
         {
-            currentAmount = width.Value * height.Value * price;
+            currentAmount = CalculateQuantity(width, height) * price;
         }
 
-        if (width.HasValue)
+        if (width.HasValue && !height.HasValue)
         {
-            currentAmount = width.Value * width.Value * price;
+            currentAmount = width.Value * price;
+        }
+
+        if (!width.HasValue && height.HasValue)
+        {
+            currentAmount = height.Value * price;
         }
 
         currentAmount = ApplyAdditions(currentAmount, additions);
@@ -23,7 +28,18 @@ public static class OrderItemHelper
         return currentAmount;
     }
 
-    private static decimal ApplyAdditions(decimal price, IEnumerable<IAddition> additions)
+    public static decimal CalculateQuantity(decimal? width, decimal? height)
+    {
+        var quantity = decimal.Zero;
+        if (width.HasValue && height.HasValue)
+        {
+            quantity = width.Value * height.Value;
+        }
+
+        return quantity;
+    }
+
+    public static decimal ApplyAdditions(decimal price, IEnumerable<IAddition> additions)
     {
         var currentPercentage = decimal.Zero;
 
@@ -44,5 +60,26 @@ public static class OrderItemHelper
         var priceWithAdditions = price * (1 + currentPercentage);
 
         return priceWithAdditions;
+    }
+
+    public static string GetMeasurmentData(decimal? width, decimal? height)
+    {
+        var result = string.Empty;
+        if (width.HasValue && height.HasValue)
+        {
+            result = $"{CommonHelper.ConvertToMeasurment(width)}x{CommonHelper.ConvertToMeasurment(height)}";
+        }
+
+        if (width.HasValue && !height.HasValue)
+        {
+            result = $"{CommonHelper.ConvertToMeasurment(width)}";
+        }
+
+        if (!width.HasValue && height.HasValue)
+        {
+            result = $"{CommonHelper.ConvertToMeasurment(height)}";
+        }
+
+        return result;
     }
 }

@@ -86,6 +86,10 @@ public static class DependencyInjection
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IUserService, UserService>();
 
+        // Document generation
+        services.AddScoped<IOrderDocumentService, OrderDocumentService>();
+        services.AddScoped<IOrderPdfGenerator, OrderPdfGenerator>();
+
         // Memory cache
         services.AddMemoryCache();
 

@@ -332,4 +332,25 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
 
         return orders;
     }
+
+    public async Task<Order?> GetByIdWithAllRelatedDataAsync(Guid id, bool needTrackiing = false, bool includeDeleted = false)
+    {
+        var query = context.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.PickupAddress)
+            .Include(o => o.DeliveryAddress)
+            .Include(o => o.Items).ThenInclude(oi => oi.Additions)
+            .Include(o => o.Items).ThenInclude(oi => oi.Product)
+            .AsQueryable();
+
+        if (!needTrackiing)
+        {
+            query = query.AsNoTracking();
+        }
+
+
+        var entity = await query.FirstOrDefaultAsync(i => i.Id == id && (includeDeleted || !i.IsDeleted));
+
+        return entity;
+    }
 }

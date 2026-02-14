@@ -8,4 +8,5 @@ public interface IOrderFactory : IBaseFactory
     Order CreateFromDto(CreateOrderDto dto, List<IAddition> orderAdditions);
     OrderDto CreateFromEntity(Order order);
     Order UpdateFromDto(OrderDeliveryDataDto dto, Order entity);
+    OrderPrintDto MapToPrintModel(Order order, int minRows = 0);
 }

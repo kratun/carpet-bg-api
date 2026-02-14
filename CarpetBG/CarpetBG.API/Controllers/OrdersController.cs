@@ -9,7 +9,10 @@ namespace CarpetBG.API.Controllers;
 
 [ApiController]
 [Route("api/orders")]
-public class OrdersController(IOrderService orderService, IOrderItemService orderItemService) : ControllerBase
+public class OrdersController(
+    IOrderService orderService,
+    IOrderItemService orderItemService,
+    IOrderDocumentService orderDocumentService) : ControllerBase
 {
     [HttpGet]
     [Authorize(Policy = PolicyConstants.OperatorAccess)]
@@ -34,6 +37,16 @@ public class OrdersController(IOrderService orderService, IOrderItemService orde
     {
         var result = await orderService.GetByIdAsync(id);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
+    [HttpGet("{id}/pdf")]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
+    public async Task<IActionResult> GetOrderPdf(Guid id)
+    {
+        var pdfBytes = await orderDocumentService.GenerateOrderPdfAsync(id);
+        if (pdfBytes == null || !pdfBytes.IsSuccess) return NotFound();
+
+        return File(pdfBytes.Value!.PdfBytes, "application/pdf", $"{pdfBytes.Value!.PdfFileName}.pdf");
     }
 
     [HttpPost]
