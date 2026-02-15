@@ -47,7 +47,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         builder.Property(o => o.PickupDate)
                .HasColumnName("pickup_date")
-               .HasColumnType("date");
+               .HasColumnType("timestamp with time zone");
 
         builder.Property(o => o.DeliveryAddressId)
                .HasColumnName("delivery_address_id")
@@ -60,7 +60,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         builder.Property(o => o.DeliveryDate)
                .HasColumnName("delivery_date")
-               .HasColumnType("date");
+               .HasColumnType("timestamp with time zone");
 
         builder.Property(o => o.OrderBy)
                .HasColumnName("order_by");

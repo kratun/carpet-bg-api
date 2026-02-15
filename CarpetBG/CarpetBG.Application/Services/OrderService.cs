@@ -16,7 +16,8 @@ public class OrderService(
     IAddressRepository addressRepository,
     IProductRepository productRepository,
     IOrderFactory orderFactory,
-    IValidator<OrderItemDto> orderItemValidator)
+    IValidator<OrderItemDto> orderItemValidator,
+    IDateTimeProvider dateTimeProvider)
     : IOrderService
 {
     public async Task<Result<PaginatedResult<OrderDto>>> GetFilteredAsync(OrderFilterDto filter)
@@ -108,8 +109,16 @@ public class OrderService(
             var price = product != null ? product.Price : decimal.Zero;
             item.Price = price;
         });
+        try
+        {
+            await repository.AddAsync(order);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.Message;
+            throw;
+        }
 
-        await repository.AddAsync(order);
 
         return Result<Guid>.Success(order.Id);
     }
@@ -184,6 +193,7 @@ public class OrderService(
                 if (dto.NextStatus == OrderStatuses.PickupComplete)
                 {
                     order.Status = dto.NextStatus;
+                    order.PickupDate = dateTimeProvider.UtcNow;
                     canUpdateManualyOrderStatus = true;
                 }
                 break;
@@ -337,6 +347,7 @@ public class OrderService(
             item.IsDelivered = true;
         });
 
+        order.DeliveryDate = dateTimeProvider.UtcNow;
         order.Status = OrderStatuses.Completed;
 
         await repository.UpdateAsync(order);
