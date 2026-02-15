@@ -17,4 +17,5 @@ public class OrderPrintDto
     public string Note { get; set; } = string.Empty;
     public List<OrderPrintItemDto> OrderItems { get; set; } = [];
     public string TotalAmount { get; set; } = string.Empty;
+    public string TotalQuantity { get; set; } = string.Empty;
 }

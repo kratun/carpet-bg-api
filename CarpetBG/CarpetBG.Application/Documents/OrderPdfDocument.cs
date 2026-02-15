@@ -112,8 +112,8 @@ public class OrderPdfDocument(OrderPrintDto model) : IDocument
             {
                 header.Cell().Element(CellStyle).AlignCenter().Text("№").Bold();
                 header.Cell().Element(CellStyle).AlignCenter().Text("Артикул").Bold();
-                header.Cell().Element(CellStyle).AlignCenter().Text("Кол.").Bold();
                 header.Cell().Element(CellStyle).AlignCenter().Text("Цена").Bold();
+                header.Cell().Element(CellStyle).AlignCenter().Text("Кол.").Bold();
                 header.Cell().Element(CellStyle).AlignCenter().Text("Сума").Bold();
             });
 
@@ -145,17 +145,26 @@ public class OrderPdfDocument(OrderPrintDto model) : IDocument
                         .AlignRight()
                         .Text(item.Measurment);
                 });
-                table.Cell().Element(CellStyle).AlignRight().Text(item.Quantity);
                 table.Cell().Element(CellStyle).AlignRight().Text(item.UnitPrice);
+                table.Cell().Element(CellStyle).AlignRight().Text(item.Quantity);
                 table.Cell().Element(CellStyle).AlignRight().Text(item.Amount);
             }
+
+            table.Footer(footer =>
+            {
+                footer.Cell().AlignCenter().Text("").Bold();
+                footer.Cell().AlignCenter().Text("").Bold();
+                footer.Cell().Element(CellStyle).AlignRight().Text("Общо:").Bold();
+                footer.Cell().Element(CellStyle).AlignRight().Text(model.TotalQuantity).Bold();
+                footer.Cell().Element(CellStyle).AlignRight().Text(model.TotalAmount).Bold();
+            });
         });
     }
 
     // ---------------- TERMS ----------------
     void ComposeTerms(IContainer container)
     {
-        container.PaddingTop(15).Column(col =>
+        container.PaddingTop(-16).Column(col =>
         {
             col.Item().Text("Общи условия").Bold().FontSize(12);
 

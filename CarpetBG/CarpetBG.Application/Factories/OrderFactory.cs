@@ -12,11 +12,10 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
     public Order CreateFromDto(CreateOrderDto dto, List<IAddition> orderAdditions)
     {
         var orderId = Guid.NewGuid();
-
         return new()
         {
             Id = orderId,
-            PickupDate = dto.PickupDate?.Date,
+            PickupDate = dto.PickupDate?.ToUniversalTime(),
             PickupAddressId = dto.PickupAddressId,
             PickupTimeRange = dto.PickupTimeRange,
             CustomerId = dto.CustomerId,
@@ -31,7 +30,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
         var isPickup = entity.Status == OrderStatuses.PendingPickup || entity.Status == OrderStatuses.New;
         if (isPickup)
         {
-            entity.PickupDate = dto.Date;
+            entity.PickupDate = dto.Date.ToUniversalTime();
             entity.PickupAddressId = dto.AddressId;
             entity.Status = OrderStatuses.PendingPickup;
             entity.PickupTimeRange = dto.TimeRange;
@@ -40,7 +39,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
         var isDelivery = entity.Status == OrderStatuses.PendingDelivery || entity.Status == OrderStatuses.WashingComplete;
         if (isDelivery)
         {
-            entity.DeliveryDate = dto.Date;
+            entity.DeliveryDate = dto.Date.ToUniversalTime();
             entity.DeliveryAddressId = dto.AddressId;
             entity.Status = OrderStatuses.PendingDelivery;
             entity.DeliveryTimeRange = dto.TimeRange;
@@ -75,6 +74,8 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
     {
         var isExpress = false;
         var items = new List<OrderPrintItemDto>();
+        var totalAmount = decimal.Zero;
+        var totalQuantity = decimal.Zero;
         foreach (var item in order.Items)
         {
             var additions = item.Additions;
@@ -83,14 +84,23 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
                 isExpress = true;
             }
 
+            var currentAmount = OrderItemHelper.CalculateAmount(
+                isExpress ? item.Product.ExpressServicePrice : item.Price,
+                item.Width, item.Height,
+                item.Additions);
+
+            var currentQuantity = OrderItemHelper.CalculateQuantity(item.Width, item.Height);
+            totalAmount += currentAmount;
+            totalQuantity += currentQuantity;
+
             var printItem = new OrderPrintItemDto
             {
-                Quantity = CommonHelper.ConvertToMeasurment(OrderItemHelper.CalculateQuantity(item.Width, item.Height)),
+                Quantity = CommonHelper.ConvertToMeasurment(currentQuantity),
                 Note = item.Note,
                 Width = CommonHelper.ConvertToMeasurment(item.Width),
                 Height = CommonHelper.ConvertToMeasurment(item.Height),
                 UnitPrice = CommonHelper.ConvertToMoney(OrderItemHelper.ApplyAdditions(item.Price, item.Additions)),
-                Amount = CommonHelper.ConvertToMoney(OrderItemHelper.CalculateAmount(isExpress ? item.Product.ExpressServicePrice : item.Price, item.Width, item.Height, item.Additions)),
+                Amount = CommonHelper.ConvertToMoney(currentAmount),
                 ProductName = item.Product.Name,
                 Measurment = OrderItemHelper.GetMeasurmentData(item.Width, item.Height),
                 Status = CommonHelper.ConvertToString(item.Status),
@@ -104,22 +114,34 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
             ? order.DeliveryAddress.DisplayAddress
             : "Същият като адреса за вземане";
 
+        var isPendingCompleted = order.Status >= OrderStatuses.PickupComplete;
+        var pickupDateLocal = order.PickupDate.HasValue && isPendingCompleted
+            ? CommonHelper.ConvertToDateWithTime(dateTimeProvider.FromUtc(order.PickupDate.Value))
+            : string.Empty;
+
+        var isDeliveryCompleted = order.Status >= OrderStatuses.DeliveryComplete;
+        var deliverypDateLocal = order.DeliveryDate.HasValue && isDeliveryCompleted
+           ? CommonHelper.ConvertToDateWithTime(dateTimeProvider.FromUtc(order.DeliveryDate.Value))
+           : string.Empty;
+
         var model = new OrderPrintDto
         {
             OrderNumber = CommonHelper.ConvertToString(order.OrderNumber),
             CreatedAt = CommonHelper.ConvertToDate(order.CreatedAt),
             CustomerFullName = order.Customer.FullName,
             DeliveryAddress = deliveryAddress,
-            DeliveryDate = CommonHelper.ConvertToDateWithTime(order.DeliveryDate),
+            DeliveryDate = deliverypDateLocal,
             DeliveryTimeRange = order.DeliveryTimeRange,
             IsExpress = isExpress,
             Note = order.Note,
             PickupAddress = order.PickupAddress.DisplayAddress,
             PhoneNumber = order.Customer.PhoneNumber,
-            PickupDate = CommonHelper.ConvertToDateWithTime(order.PickupDate),
+            PickupDate = pickupDateLocal,
             PickupTimeRange = order.PickupTimeRange,
             Status = CommonHelper.ConvertToString(order.Status),
             OrderItems = items,
+            TotalAmount = CommonHelper.ConvertToMoney(totalAmount),
+            TotalQuantity = CommonHelper.ConvertToMeasurment(totalQuantity)
         };
 
         // ⭐ PAD EMPTY ROWS

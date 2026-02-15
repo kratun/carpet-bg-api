@@ -62,10 +62,10 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
 
             query = query.Where(i => unrestrictedStatuses.Contains(i.Status));
 
-            DateTime? pickupDate = filter!.PickupDate.HasValue ? filter!.PickupDate.Value.Date : null;
+            DateTime? pickupDate = filter!.PickupDate.HasValue ? dateTimeProvider.ToUtc(filter!.PickupDate.Value) : null;
             DateTime? nextPickupDay = pickupDate.HasValue ? pickupDate.Value.AddDays(1) : null;
 
-            DateTime? deliveryDate = filter!.DeliveryDate.HasValue ? filter!.DeliveryDate.Value.Date : null;
+            DateTime? deliveryDate = filter!.DeliveryDate.HasValue ? dateTimeProvider.ToUtc(filter!.DeliveryDate.Value) : null;
             DateTime? nextDeliveryDay = deliveryDate.HasValue ? deliveryDate.Value.AddDays(1) : null;
 
             query = query.Where(i =>
