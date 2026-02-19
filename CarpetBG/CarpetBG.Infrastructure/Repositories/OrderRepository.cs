@@ -18,12 +18,14 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
     private readonly List<OrderStatuses> _orderStatuses =
     [
         OrderStatuses.New,
+        OrderStatuses.PrePickupSetup,
         OrderStatuses.PendingPickup,
         OrderStatuses.PickupComplete,
         OrderStatuses.WashingInProgress,
         OrderStatuses.WashingComplete,
-        OrderStatuses.PersonalDelivery,
+        OrderStatuses.PreDeliverySetup,
         OrderStatuses.PendingDelivery,
+        OrderStatuses.PersonalDelivery,
         OrderStatuses.DeliveryComplete,
         OrderStatuses.Cancelled,
         OrderStatuses.Completed,
@@ -150,8 +152,8 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
             var targetStatuses = incomingFilter.Filter!.Statuses;
             var unrestrictedStatuses = targetStatuses
                 .Where(t =>
-                    t.Status == OrderStatuses.New
-                    || t.Status == OrderStatuses.WashingComplete
+                    t.Status == OrderStatuses.PrePickupSetup
+                    || t.Status == OrderStatuses.PreDeliverySetup
                     || (t.Status == OrderStatuses.PendingPickup && !t.Date.HasValue)
                     || (t.Status == OrderStatuses.PendingDelivery && !t.Date.HasValue))
                 .Select(t => t.Status)
@@ -191,6 +193,95 @@ public class OrderRepository(AppDbContext context, IDateTimeProvider dateTimePro
         var pageIndex = PaginationHelper.NormalizePageIndex(incomingFilter.PageIndex, incomingFilter.PageSize, totalCount);
 
         query = query.ApplyPagination(pageIndex, incomingFilter.PageSize);
+
+        var items = await query
+            .Select(i => new OrderDto
+            {
+                Id = i.Id,
+                OrderNumber = i.OrderNumber,
+                CreatedAt = i.CreatedAt,
+                IsExpress = i.Items.All(i => i.Additions.Any(a => a.NormalizedName == "express")),
+                PickupAddress = i.PickupAddress.DisplayAddress,
+                PickupDate = i.PickupDate,
+                PickupAddressId = i.PickupAddressId,
+                CustomerId = i.CustomerId,
+                PhoneNumber = i.Customer.PhoneNumber,
+                CustomerFullName = i.Customer.FullName,
+                PickupTimeRange = i.PickupTimeRange,
+                Status = i.Status,
+                Note = i.Note,
+                DeliveryAddress = i.DeliveryAddress.DisplayAddress,
+                DeliveryAddressId = i.DeliveryAddressId,
+                DeliveryDate = i.DeliveryDate,
+                DeliveryTimeRange = i.DeliveryTimeRange,
+                OrderBy = i.OrderBy,
+                OrderItems = i.Items.Select(oi => new OrderItemDto
+                {
+                    Id = oi.Id,
+                    Height = oi.Height,
+                    Note = oi.Note,
+                    Price = oi.Price,
+                    Width = oi.Width,
+                    ProductId = oi.ProductId ?? Guid.Empty,
+                    Additions = oi.Additions.Select(a => new AdditionDto
+                    {
+                        AdditionType = a.AdditionType,
+                        Name = a.Name,
+                        NormalizedName = a.NormalizedName,
+                        Value = a.Value
+                    }).ToList(),
+                }).ToList(),
+            })
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<(List<OrderDto> Items, int TotalCount)> GetPreLogisticSetupDataAsync(OrderFilterDto filter, bool includeDeleted = false)
+    {
+        var query = context.Orders
+            .Include(i => i.Items)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!includeDeleted)
+        {
+            query = query.Where(i => !i.IsDeleted);
+        }
+
+        // Only New and WashingComplete orders
+        query = query.Where(o =>
+            o.Status == OrderStatuses.New || o.Status == OrderStatuses.WashingComplete);
+
+        // Date range filter (status-dependent field)
+        // Reuse filter.PickupDate as "from" and filter.DeliveryDate as "to"
+        if (filter.Filter?.PickupDate.HasValue == true)
+        {
+            var fromDate = dateTimeProvider.ToUtc(filter.Filter.PickupDate.Value);
+            query = query.Where(o =>
+                (o.Status == OrderStatuses.New && o.CreatedAt >= fromDate) ||
+                (o.Status == OrderStatuses.WashingComplete && o.PickupDate >= fromDate));
+        }
+
+        if (filter.Filter?.DeliveryDate.HasValue == true)
+        {
+            var toDate = dateTimeProvider.ToUtc(filter.Filter.DeliveryDate.Value).AddDays(1);
+            query = query.Where(o =>
+                (o.Status == OrderStatuses.New && o.CreatedAt < toDate) ||
+                (o.Status == OrderStatuses.WashingComplete && o.PickupDate < toDate));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        // Sort: express first, then status-dependent date ASC
+        query = query
+            .OrderByDescending(o => o.Items.All(i => i.Additions.Any(a => a.NormalizedName == "express")))
+            .ThenBy(o =>
+                o.Status == OrderStatuses.New ? o.CreatedAt :
+                (o.PickupDate ?? DateTime.MaxValue));
+
+        var pageIndex = PaginationHelper.NormalizePageIndex(filter.PageIndex, filter.PageSize, totalCount);
+        query = query.ApplyPagination(pageIndex, filter.PageSize);
 
         var items = await query
             .Select(i => new OrderDto

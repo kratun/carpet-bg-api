@@ -19,7 +19,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
             PickupAddressId = dto.PickupAddressId,
             PickupTimeRange = dto.PickupTimeRange,
             CustomerId = dto.CustomerId,
-            Status = OrderStatuses.PendingPickup,
+            Status = OrderStatuses.New,
             Note = dto.Note ?? string.Empty,// TODO add migration for nullable
             Items = [.. dto.OrderItems.Select(oi => orderItemFactory.CreateFromDto(oi, orderId, orderAdditions))]
         };
@@ -27,7 +27,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
 
     public Order UpdateFromDto(OrderDeliveryDataDto dto, Order entity)
     {
-        var isPickup = entity.Status == OrderStatuses.PendingPickup || entity.Status == OrderStatuses.New;
+        var isPickup = entity.Status == OrderStatuses.PendingPickup || entity.Status == OrderStatuses.PrePickupSetup;
         if (isPickup)
         {
             entity.PickupDate = dto.Date.ToUniversalTime();
@@ -36,7 +36,7 @@ public class OrderFactory(IDateTimeProvider dateTimeProvider, IOrderItemFactory 
             entity.PickupTimeRange = dto.TimeRange;
         }
 
-        var isDelivery = entity.Status == OrderStatuses.PendingDelivery || entity.Status == OrderStatuses.WashingComplete;
+        var isDelivery = entity.Status == OrderStatuses.PendingDelivery || entity.Status == OrderStatuses.PreDeliverySetup;
         if (isDelivery)
         {
             entity.DeliveryDate = dto.Date.ToUniversalTime();

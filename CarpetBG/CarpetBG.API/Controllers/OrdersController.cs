@@ -30,6 +30,22 @@ public class OrdersController(
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
     }
 
+    [HttpGet("pre-logistic-setup")]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
+    public async Task<IActionResult> GetPreLogisticSetup([FromQuery] OrderFilterDto dto)
+    {
+        var result = await orderService.GetPreLogisticSetupDataAsync(dto);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
+    [HttpPut("pre-logistic-setup")]
+    [Authorize(Policy = PolicyConstants.OperatorAccess)]
+    public async Task<IActionResult> PreLogisticSetup([FromBody] PreLogisticSetupDto dto)
+    {
+        var result = await orderService.PreLogisticSetupAsync(dto);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    }
+
     [HttpGet]
     [Route("{id}")]
     [Authorize(Policy = PolicyConstants.OperatorAccess)]

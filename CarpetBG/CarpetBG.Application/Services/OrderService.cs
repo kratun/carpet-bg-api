@@ -45,6 +45,63 @@ public class OrderService(
         return Result<PaginatedResult<OrderDto>>.Success(paginated);
     }
 
+    public async Task<Result<PaginatedResult<OrderDto>>> GetPreLogisticSetupDataAsync(OrderFilterDto filter)
+    {
+        var (items, totalCount) = await repository.GetPreLogisticSetupDataAsync(filter);
+
+        var paginated = orderFactory.CreatePaginatedResult(items, totalCount, filter.PageIndex, filter.PageSize);
+
+        return Result<PaginatedResult<OrderDto>>.Success(paginated);
+    }
+
+    public async Task<Result<int>> PreLogisticSetupAsync(PreLogisticSetupDto dto)
+    {
+        if (dto.OrderIds == null || dto.OrderIds.Count == 0)
+        {
+            return Result<int>.Failure("Моля, изберете поне една поръчка");
+        }
+
+        if (dto.Date.Date <= dateTimeProvider.UtcNow.Date)
+        {
+            return Result<int>.Failure("Датата трябва да е в бъдещето");
+        }
+
+        var entities = await repository.GetByIdsAsync(dto.OrderIds, needTracking: true);
+
+        if (entities.Count != dto.OrderIds.Count)
+        {
+            return Result<int>.Failure("Една или повече поръчки не бяха намерени");
+        }
+
+        var hasInvalidStatus = entities
+            .Any(e => e.Status != OrderStatuses.New && e.Status != OrderStatuses.WashingComplete);
+
+        if (hasInvalidStatus)
+        {
+            return Result<int>.Failure("Една или повече поръчки имат невалиден статус. Моля, прегледайте селекцията и опитайте отново.");
+        }
+
+        foreach (var order in entities)
+        {
+            if (order.Status == OrderStatuses.New)
+            {
+                order.Status = OrderStatuses.PrePickupSetup;
+                order.PickupDate = dto.Date.ToUniversalTime();
+            }
+            else if (order.Status == OrderStatuses.WashingComplete)
+            {
+                order.Status = OrderStatuses.PreDeliverySetup;
+                order.DeliveryDate = dto.Date.ToUniversalTime();
+            }
+
+            order.UpdatedAt = dateTimeProvider.UtcNow;
+        }
+
+        await repository.UpdateRangeAsync(entities);
+
+        return Result<int>.Success(entities.Count);
+    }
+
     public async Task<Result<OrderDto>> GetByIdAsync(Guid id)
     {
         var order = await repository.GetByIdAsync(id);
@@ -230,7 +287,7 @@ public class OrderService(
         var canUpdateManualyOrderStatus = false;
         switch (order.Status)
         {
-            case OrderStatuses.PendingPickup:
+            case OrderStatuses.PrePickupSetup:
                 if (dto.NextStatus == OrderStatuses.New)
                 {
                     order.Status = dto.NextStatus;
@@ -239,10 +296,28 @@ public class OrderService(
                     canUpdateManualyOrderStatus = true;
                 }
                 break;
-            case OrderStatuses.PendingDelivery:
+            case OrderStatuses.PendingPickup:
+                if (dto.NextStatus == OrderStatuses.PrePickupSetup)
+                {
+                    order.Status = dto.NextStatus;
+                    order.PickupTimeRange = null!;
+                    canUpdateManualyOrderStatus = true;
+                }
+                break;
+            case OrderStatuses.PreDeliverySetup:
                 if (dto.NextStatus == OrderStatuses.WashingComplete)
                 {
                     order.Status = dto.NextStatus;
+                    order.DeliveryDate = null;
+                    canUpdateManualyOrderStatus = true;
+                }
+                break;
+            case OrderStatuses.PendingDelivery:
+                if (dto.NextStatus == OrderStatuses.PreDeliverySetup)
+                {
+                    order.Status = dto.NextStatus;
+                    order.DeliveryTimeRange = string.Empty;
+                    order.DeliveryAddressId = null;
                     canUpdateManualyOrderStatus = true;
                 }
                 break;
@@ -279,13 +354,13 @@ public class OrderService(
         List<OrderStatuses> picupStatses =
         [
             OrderStatuses.PendingPickup,
-            OrderStatuses.New
+            OrderStatuses.PrePickupSetup
         ];
 
         List<OrderStatuses> allowedStatuses =
         [
             ..picupStatses,
-            OrderStatuses.WashingComplete,
+            OrderStatuses.PreDeliverySetup,
             OrderStatuses.PendingDelivery,
         ];
 
