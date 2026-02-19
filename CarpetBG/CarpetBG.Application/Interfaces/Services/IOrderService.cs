@@ -7,6 +7,8 @@ public interface IOrderService
 {
     Task<Result<PaginatedResult<OrderDto>>> GetFilteredAsync(OrderFilterDto filter);
     Task<Result<PaginatedResult<OrderDto>>> GetSetupLogisticDataAsync(OrderFilterDto filter);
+    Task<Result<PaginatedResult<OrderDto>>> GetPreLogisticSetupDataAsync(OrderFilterDto filter);
+    Task<Result<int>> PreLogisticSetupAsync(PreLogisticSetupDto dto);
     Task<Result<OrderDto>> GetByIdAsync(Guid id);
 
     Task<Result<Guid>> CreateOrderAsync(CreateOrderDto dto);
